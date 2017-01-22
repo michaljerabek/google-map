@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Map</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .map {
+            height: 25vh;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <div id="map" class="map"></div>
+    <div id="map2" class="map"></div>
+    <div id="map3" class="map"></div>
+    <div id="map4" class="map"></div>
+    <div id="map5" class="map"></div>
+
+    <script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+    <!-- ---------------------------------------------------------------------------------------------------- !! callback=googleMapsInit !! -->
+    <script defer async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_hHC_U83qwSgTWlK4rEC5xfNInW-KOAI&callback=googleMapsInit"></script>
+
+    <script src="GoogleMap.js"></script>
+    <script src="styles/grayscale.js"></script>
+    <script src="styles/grayscale-inverse.js"></script>
+
+    <script>/*global GoogleMap, GoogleMaps*/
+
+        GoogleMaps.onInit = function () {
+            console.log("GoogleMaps initialized!");
+        };
+
+        var map = new GoogleMap({
+            el: "#map",
+            icon: "marker.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.STYLE("grayscale"),
+            onInit: function () {
+                console.log("#map initialized!");
+            }
+        });
+
+        map.addInfo({
+            content: "Nazdárek!",
+            marker: map.markers[0]
+        });
+
+
+        var map2 = new GoogleMap({
+            el: "#map2",
+            icon: "marker2.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.STYLE("grayscale", function (styles) {
+
+                styles.push({
+                    elementType: "all",
+                    stylers: [
+                        {
+                            gamma: 0.35
+                        }
+                    ]
+                });
+
+                styles.forEach(function (style) {
+
+                    if (style.featureType === "water" && style.elementType === "geometry") {
+
+                        style.stylers.push({
+                            lightness: 40
+                        });
+                    }
+                });
+            }),
+            info: "Ahoj, tady je New York!"
+        });
+
+        map2.addMarker({
+            icon: "marker3.png",
+            coords: [40.705565, -74.1380853],
+        });
+
+
+        var map3 = new GoogleMap({
+            el: "#map3",
+            icon: "marker3.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.STYLE("grayscale-inverse")
+        });
+
+        map3.addMarker({
+            icon: "marker.png",
+            coords: [40.705565, -74.1380853],
+            info: "Zdravíme!"
+        });
+
+
+        var map4 = new GoogleMap({
+            el: "#map4",
+            icon: "marker4.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.STYLE("grayscale-inverse", function (styles) {
+
+                styles.forEach(function (style) {
+
+                    if (style.elementType === "labels.text.fill") {
+
+                        style.stylers[0].color = "#dc143c";
+                    }
+                });
+            })
+        });
+
+        var marker = map4.addMarker({
+            icon: "marker2.png",
+            coords: [40.705565, -74.1380853]
+        });
+
+        map4.addInfo({
+            content: "Dobrý den!",
+            marker: marker
+        });
+
+
+        var map5 = new GoogleMap({
+            el: "#map5",
+            icon: "marker4.png",
+            markers: [
+                {
+                    coords: [40.705565, -74.1180853]
+                },
+                {
+                    coords: [40.705565, -74.1380853],
+                    info: "Druhý!"
+                }
+            ],
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.STYLE("grayscale"),
+            controls: true
+        });
+
+    </script>
+
+</body>
+</html>
