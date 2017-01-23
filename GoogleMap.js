@@ -9,15 +9,19 @@
      *     coords: [50.0879712, 14.4172372],
      *     icon: "marker.png",
      *     markers: [{icon: "marker.png", coords: []}],
+     *     addMarker: false,
+     *     html: "" | HTMLElement | {html: "", coords: [], draw: function} || [...]
      *     zoom: 14,
      *     styles: [],
      *     info: "",
-     *     mapOptions: {},
+     *     options: {},
      *     controls: false
      * }
      * */
 
-    var DEFAUlTS = {
+    var $EVENT = $({}),
+
+        DEFAUlTS = {
             el: "#map",
 
             zoom: 13,
@@ -59,6 +63,8 @@
                 };
 
             window.googleMapsInit = function googleMapsInit() {
+
+                $EVENT.trigger("googleMapInit.GoogleMap");
 
                 if (typeof window.GoogleMaps.onInit === "function") {
 
@@ -112,6 +118,9 @@
             this.markers = [];
             this._markers = [];
             this._infos = [];
+            this.infos = [];
+            this._htmls = [];
+            this.htmls = [];
 
             GoogleMaps.addMap(this);
         };
@@ -156,9 +165,9 @@
             mapOptions.fullscreenControl = false;
         }
 
-        if (this.options.mapOptions) {
+        if (this.options.options) {
 
-            mapOptions = $.extend({}, mapOptions, this.options.mapOptions);
+            mapOptions = $.extend({}, mapOptions, this.options.options);
         }
 
         if (typeof this.options.onInit === "function") {
@@ -174,13 +183,29 @@
 
             this.options.markers.forEach(this.addMarker.bind(this));
 
-        } else {
+        } else if (this.options.icon || this.options.addMarker) {
 
             this.addMarker({
                 coords: mapOptions.location,
                 icon: this.options.icon,
                 info: this.options.info
             });
+        }
+
+        if (this.options.html) {
+
+            if (this.options.html instanceof Array) {
+
+                this.options.html.forEach(function (options) {
+
+                    this.addHTML(options);
+
+                }.bind(this));
+
+            } else {
+
+                this.addHTML(this.options.addHTML(this.options.html));
+            }
         }
 
         this._markers.forEach(function (options) {
@@ -192,6 +217,12 @@
         this._infos.forEach(function (options) {
 
             this.addInfo(options);
+
+        }.bind(this));
+
+        this._htmls.forEach(function (options) {
+
+            this.addHTML(options);
 
         }.bind(this));
     };
@@ -212,11 +243,18 @@
             options.coords = new google.maps.LatLng(options.coords[0], options.coords[1]);
         }
 
-        var marker = new google.maps.Marker({
+        var markerOptions = {
                 position: options.coords || this.map.location,
                 map: this.map,
                 icon: options.icon || this.options.icon
-            });
+            };
+
+        if (options.options) {
+
+            markerOptions = $.extend({}, markerOptions, options.options);
+        }
+
+        var marker = new google.maps.Marker(markerOptions);
 
         if (options.info) {
 
@@ -244,15 +282,25 @@
 
         options.marker = options.marker || this.markers[this.markers.length - 1];
 
-        var info = new google.maps.InfoWindow({
+        var infoOptions = {
                 content: options.content
-            }),
+            };
 
-            touch = false;
+        if (options.options) {
+
+            infoOptions = $.extend({}, infoOptions, options.options);
+        }
+
+        var info = new google.maps.InfoWindow(infoOptions),
+
+            touch = false,
+            opened = false;
 
         google.maps.event.addListener(options.marker, "touchend", function() {
 
             touch = true;
+
+            opened = true;
 
             info.open(this.map, this);
         });
@@ -266,10 +314,34 @@
                 return;
             }
 
+            opened = true;
+
             info.open(this.map, this);
         });
 
+        this.infos.push(info);
+
         return info;
+    };
+
+    GoogleMap.prototype.addHTML = function (options) {
+
+        if (!this.initialized) {
+
+            this._htmls.push(options);
+
+            return;
+        }
+
+        var html = typeof options === "string" || options instanceof HTMLElement ? options : options.html,
+            position = typeof options === "object" && !(options instanceof HTMLElement) ? options.coords : null,
+            draw = typeof options === "object" && !(options instanceof HTMLElement) ? options.draw : null,
+
+            overlay = new GoogleMapHTMLOverlay(this.map, html, position, draw);
+
+        this.htmls.push(overlay);
+
+        return overlay;
     };
 
     GoogleMap.getStyles = function (name, modifier) {
@@ -293,6 +365,105 @@
         return style;
     };
 
+    var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn) {
+
+            this.html = html;
+
+            this.$el = null;
+            this.el = null;
+
+            this.map = map;
+
+            if (drawFn) {
+
+                this.draw = drawFn;
+            }
+
+            if (position instanceof google.maps.LatLng) {
+
+                this.position = position;
+
+            } else if (position instanceof google.maps.Marker) {
+
+                this.position = position.position;
+
+            } else if (position instanceof Array) {
+
+                this.position = new google.maps.LatLng(position[0], position[1]);
+
+            } else {
+
+                this.position = this.map.location;
+            }
+
+            this.setMap(map);
+        };
+
+    $EVENT.on("googleMapInit.GoogleMap", function () {
+
+        GoogleMapHTMLOverlay.prototype = new google.maps.OverlayView();
+
+        GoogleMapHTMLOverlay.prototype.onAdd = function() {
+
+            var panes = this.getPanes();
+
+            this.$el = $("<div></div>");
+
+            this.$el
+                .css("position", "absolute")
+                .html(this.html)
+                .appendTo(panes.overlayLayer);
+
+            this.el = this.$el[0];
+        };
+
+        GoogleMapHTMLOverlay.prototype.draw = function() {
+
+            var overlayProjection = this.getProjection(),
+
+                position = overlayProjection.fromLatLngToDivPixel(this.position),
+                size = {
+                    width: this.$el.outerWidth(),
+                    height: this.$el.outerHeight()
+                };
+
+            this.el.style.left = (position.x - (size.width / 2)) + "px";
+            this.el.style.top = (position.y - size.height) + "px";
+        };
+
+        GoogleMapHTMLOverlay.prototype.onRemove = function() {
+
+            this.$el.remove();
+
+            this.$el = null;
+            this.el = null;
+        };
+
+        GoogleMapHTMLOverlay.prototype.show = function() {
+
+            return this.$el.fadeIn.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.hide = function() {
+
+            return this.$el.fadeOut.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.animate = function() {
+
+            return this.$el.animate.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.css = function() {
+
+            return this.$el.css.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.find = function() {
+
+            return this.$el.find.apply(this.$el, arguments);
+        };
+    });
 
     var GoogleMapStyle = window.GoogleMapStyle = function GoogleMapStyle(styles) {
 
@@ -338,7 +509,7 @@
 
         this.each(function (style) {
 
-            if ((style.featureType === featureType || !featureType || (style.featureType && style.featureType.indexOf(featureType + ".") === 0)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
+            if ((style.featureType === featureType || !featureType || featureType === "all" || (style.featureType && style.featureType.indexOf(featureType + ".") === 0)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
 
                 style.stylers = this.toStylers(styles);
             }
