@@ -45,7 +45,7 @@
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale"),
+            styles: GoogleMap.getStyles("grayscale"),
             onInit: function () {
                 console.log("#map initialized!");
             }
@@ -61,25 +61,11 @@
             el: "#map2",
             icon: "marker2.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale", function (styles) {
+            styles: GoogleMap.getStyles("grayscale", function () {
 
-                styles.push({
-                    elementType: "all",
-                    stylers: [
-                        {
-                            gamma: 0.35
-                        }
-                    ]
-                });
-
-                styles.forEach(function (style) {
-
-                    if (style.featureType === "water" && style.elementType === "geometry") {
-
-                        style.stylers.push({
-                            lightness: 40
-                        });
-                    }
+                this.add("all", "all", {
+                    gamma: 0.3,
+                    lightness: 30
                 });
             }),
             info: "Ahoj, tady je New York!"
@@ -95,7 +81,7 @@
             el: "#map3",
             icon: "marker3.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale-inverse")
+            styles: GoogleMap.getStyles("grayscale-inverse")
         });
 
         map3.addMarker({
@@ -109,14 +95,19 @@
             el: "#map4",
             icon: "marker4.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale-inverse", function (styles) {
 
-                styles.forEach(function (style) {
+            styles: GoogleMap.getStyles("grayscale-inverse", function () {
 
-                    if (style.elementType === "labels.text.fill") {
+                this.set("all", "all", {
+                    gamma: 0.75
+                });
 
-                        style.stylers[0].color = "#dc143c";
-                    }
+                this.all(null, "labels.text.fill", {
+                    color: "#dc143c"
+                });
+
+                this.all("road", "labels.text.fill", {
+                    color: "#fa8072"
                 });
             })
         });
@@ -145,7 +136,7 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale"),
+            styles: GoogleMap.getStyles("grayscale"),
             controls: true
         });
 
