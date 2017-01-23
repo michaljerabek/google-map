@@ -1,12 +1,101 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery, google, HTMLElement*/
+/*global jQuery, google*/
+(function ($) {
+
+    /**
+     * Zajišťuje inicializaci map po spojení s Googlem.
+     *
+     * K GoogleMaps.onInit lze přiřadit funkci, která se spustí při inicializaci.
+     */
+    var GoogleMaps = (function GoogleMaps() {
+
+        var maps = [],
+
+            initialized = false,
+
+            /*
+             * Přidá novou GoogleMap a inicializuje ji, pokud již byly Google Maps inicializovány.
+             *
+             * map - instance GoogleMap.
+             * */
+            addMap = function (map) {
+
+                if (!(map instanceof window.GoogleMap)) {
+
+                    return false;
+                }
+
+                maps.push(map);
+
+                if (initialized) {
+
+                    map.init();
+                }
+
+                return map;
+            },
+
+            /**
+             * Inicializuje připravené GoogleMapy.
+             */
+            init = function () {
+
+                maps.forEach(function (map) {
+
+                    map.init();
+                });
+
+                initialized = true;
+            };
+
+        /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
+        window.googleMapsInit = function googleMapsInit() {
+
+            window.GoogleMaps.$EVENT.trigger("googleMapInit.GoogleMap");
+
+            if (typeof window.GoogleMaps.onInit === "function") {
+
+                window.GoogleMaps.onInit();
+            }
+
+            google.maps.event.addDomListener(window, "load", init);
+        };
+
+        window.GoogleMaps = {
+            //window.GoogleMaps.onInit
+            addMap: addMap
+        };
+
+        return window.GoogleMaps;
+
+    }());
+
+    GoogleMaps.$EVENT = $({});
+
+}(jQuery));
+/*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
+/*global jQuery, google, HTMLElement, GoogleMapHTMLOverlay, GoogleMaps, GoogleMapStyle*/
 
 (function ($) {
 
-    var $EVENT = $({}),
-
-        /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
-        DEFAUlTS = {
+    /*
+     * Vytvoří novou mapu.
+     *
+     * options - {
+     *     el: "#map", - element, do kterého se vloží mapa
+     *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
+     *     icon: "marker.png", - obrázek pro vlastní pin
+     *     markers: [{icon: "marker.png", coords: [], info: "", options: {}}], - více vlastních pinů
+     *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
+     *     html: "" | HTMLElement | {html: "" | HTMLElement, coords: [] | Marker | LatLng, draw: function} | [...] - html obsah na mapě
+     *     zoom: 14, - přiblížení mapy
+     *     styles: [] | GoogleMapStyle, - styl mapy
+     *     info: "", - informace zobrazující se u výchozího markeru
+     *     options: {}, - nastavení přidávající k mapě další nastavení
+     *     controls: false - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
+     * }
+     * */
+    var DEFAUlTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
             el: "#map",
 
             zoom: 13,
@@ -14,92 +103,6 @@
             styles: []
         },
 
-        /**
-         * Zajišťuje inicializaci map po spojení s Googlem.
-         *
-         * K GoogleMaps.onInit lze přiřadit funkci, která se spustí při inicializaci.
-         */
-        GoogleMaps = (function GoogleMaps() {
-
-            var maps = [],
-
-                initialized = false,
-
-                /*
-                 * Přidá novou GoogleMap a inicializuje ji, pokud již byly Google Maps inicializovány.
-                 *
-                 * map - instance GoogleMap.
-                 * */
-                addMap = function (map) {
-
-                    if (!(map instanceof window.GoogleMap)) {
-
-                        return false;
-                    }
-
-                    maps.push(map);
-
-                    if (initialized) {
-
-                        map.init();
-                    }
-
-                    return map;
-                },
-
-                /**
-                 * Inicializuje připravené GoogleMapy.
-                 */
-                init = function () {
-
-                    maps.forEach(function (map) {
-
-                        map.init();
-                    });
-
-                    initialized = true;
-                };
-
-            /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
-            window.googleMapsInit = function googleMapsInit() {
-
-                $EVENT.trigger("googleMapInit.GoogleMap");
-
-                if (typeof window.GoogleMaps.onInit === "function") {
-
-                    window.GoogleMaps.onInit();
-                }
-
-                google.maps.event.addDomListener(window, "load", init);
-            };
-
-            window.GoogleMaps = {
-                //window.GoogleMaps.onInit
-                addMap: addMap
-            };
-
-            return window.GoogleMaps;
-
-        }()),
-
-
-        /*
-         * Vytvoří novou mapu.
-         *
-         * options - {
-         *     el: "#map", - element, do kterého se vloží mapa
-         *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
-         *     icon: "marker.png", - obrázek pro vlastní pin
-         *     markers: [{icon: "marker.png", coords: [], info: "", options: {}}], - více vlastních pinů
-         *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
-         *     html: "" | HTMLElement | {html: "" | HTMLElement, coords: [] | Marker | LatLng, draw: function} | [...] - html obsah na mapě
-         *     zoom: 14, - přiblížení mapy
-         *     styles: [] | GoogleMapStyle, - styl mapy
-         *     info: "", - informace zobrazující se u výchozího markeru
-         *     options: {}, - nastavení přidávající k mapě další nastavení
-         *     controls: false - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
-         * }
-         * */
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
 
             if (typeof options !== "object") {
@@ -173,7 +176,7 @@
             mapOptions.location = new google.maps.LatLng(this.options.coords[0], this.options.coords[1]);
         }
 
-        if (this.options.styles instanceof window.GoogleMapStyle) {
+        if (this.options.styles instanceof GoogleMapStyle) {
 
             mapOptions.styles = this.options.styles.getStyles();
 
@@ -409,6 +412,13 @@
         return style;
     };
 
+
+}(jQuery));
+/*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
+/*global jQuery, google, GoogleMaps*/
+
+(function ($) {
+
     /**
      * Třída zajišťující vložení vlastního HTML do mapy.
      *
@@ -419,40 +429,40 @@
      */
     var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn) {
 
-            this.html = html;
+        this.html = html;
 
-            this.$el = null;
-            this.el = null;
+        this.$el = null;
+        this.el = null;
 
-            this.map = map;
+        this.map = map;
 
-            if (drawFn) {
+        if (drawFn) {
 
-                this.draw = drawFn;
-            }
+            this.draw = drawFn;
+        }
 
-            if (position instanceof google.maps.LatLng) {
+        if (position instanceof google.maps.LatLng) {
 
-                this.position = position;
+            this.position = position;
 
-            } else if (position instanceof google.maps.Marker) {
+        } else if (position instanceof google.maps.Marker) {
 
-                this.position = position.position;
+            this.position = position.position;
 
-            } else if (position instanceof Array) {
+        } else if (position instanceof Array) {
 
-                this.position = new google.maps.LatLng(position[0], position[1]);
+            this.position = new google.maps.LatLng(position[0], position[1]);
 
-            } else {
+        } else {
 
-                this.position = this.map.location;
-            }
+            this.position = this.map.location;
+        }
 
-            this.setMap(map);
-        };
+        this.setMap(map);
+    };
 
     /*Prototype GoogleMapHTMLOverlay je potřeba nastavit až po inicializace, protože potřebujeme globální objekt google.*/
-    $EVENT.on("googleMapInit.GoogleMap", function () {
+    GoogleMaps.$EVENT.on("googleMapInit.GoogleMap", function () {
 
         GoogleMapHTMLOverlay.prototype = new google.maps.OverlayView();
 
@@ -530,6 +540,14 @@
             return this.$el.find.apply(this.$el, arguments);
         };
     });
+
+
+}(jQuery));
+/*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
+/*global jQuery*/
+
+(function ($) {
+
 
     /**
      * Třída obsahující styly pro mapu. Obsahuje jednoduché API pro upravování stylu.
@@ -879,5 +897,6 @@
 
         return this.styles;
     };
+
 
 }(jQuery));
