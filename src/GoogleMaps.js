@@ -1,5 +1,5 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery, google*/
+/*global jQuery, google, GoogleMap*/
 (function ($) {
 
     /**
@@ -7,7 +7,7 @@
      *
      * K GoogleMaps.onInit lze přiřadit funkci, která se spustí při inicializaci.
      */
-    var GoogleMaps = (function GoogleMaps() {
+    var GoogleMaps = window.GoogleMaps = (function GoogleMaps() {
 
         var maps = [],
 
@@ -20,7 +20,7 @@
              * */
             addMap = function (map) {
 
-                if (!(map instanceof window.GoogleMap)) {
+                if (!(map instanceof GoogleMap)) {
 
                     return false;
                 }
@@ -61,12 +61,10 @@
             google.maps.event.addDomListener(window, "load", init);
         };
 
-        window.GoogleMaps = {
+        return {
             //window.GoogleMaps.onInit
             addMap: addMap
         };
-
-        return window.GoogleMaps;
 
     }());
 
