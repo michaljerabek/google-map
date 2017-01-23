@@ -54,8 +54,6 @@
             styles: GoogleMap.getStyles("grayscale"),
             onInit: function () {
 
-                console.log("#map initialized!");
-
                 map.addInfo({
                     content: "Nazdárek!",
                     marker: this.markers[0]
@@ -174,7 +172,7 @@
             "</div>"
         ].join();
 
-        /*Proměná html bude undefined, protože mapa ještě není inicialozovaná. HTML je po inicializace možné najít v map6.HTMLs.*/
+        /*Proměná html bude undefined, protože mapa ještě není inicialozovaná. HTML je po inicializaci možné najít v map6.HTMLs.*/
         var html = map6.addHTML(html6);
 
         /*Mapa s několika HTML boxy.*/

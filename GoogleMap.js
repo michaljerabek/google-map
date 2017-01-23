@@ -100,7 +100,6 @@
          *     controls: false - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
          * }
          * */
-
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
 
             if (typeof options !== "object") {
@@ -147,6 +146,7 @@
 
     GoogleMap.STYLES = {};
 
+    /*Prázdný styl.*/
     GoogleMap.STYLES.empty = function () {
 
         return [];
@@ -220,36 +220,17 @@
 
             if (this.options.html instanceof Array) {
 
-                this.options.html.forEach(function (options) {
-
-                    this.addHTML(options);
-
-                }.bind(this));
+                this.options.html.forEach(this.addHTML.bind(this));
 
             } else {
 
-                this.addHTML(this.options.addHTML(this.options.html));
+                this.addHTML(this.options.html);
             }
         }
 
-        this._markers.forEach(function (options) {
-
-            this.addMarker(options);
-
-        }.bind(this));
-
-        this._infos.forEach(function (options) {
-
-            this.addInfo(options);
-
-        }.bind(this));
-
-        this._htmls.forEach(function (options) {
-
-            this.addHTML(options);
-
-        }.bind(this));
-
+        this._markers.forEach(this.addMarker.bind(this));
+        this._infos.forEach(this.addInfo.bind(this));
+        this._htmls.forEach(this.addHTML.bind(this));
 
         if (typeof this.options.onInit === "function") {
 
@@ -285,10 +266,10 @@
         }
 
         var markerOptions = {
-                position: options.coords || this.map.location,
-                map: this.map,
-                icon: options.icon || this.options.icon
-            };
+            position: options.coords || this.map.location,
+            map: this.map,
+            icon: options.icon || this.options.icon
+        };
 
         if (options.options) {
 
@@ -334,8 +315,8 @@
         options.marker = options.marker || this.markers[this.markers.length - 1];
 
         var infoOptions = {
-                content: options.content
-            };
+            content: options.content
+        };
 
         if (options.options) {
 
@@ -344,14 +325,11 @@
 
         var info = new google.maps.InfoWindow(infoOptions),
 
-            touch = false,
-            opened = false;
+            touch = false;
 
         google.maps.event.addListener(options.marker, "touchend", function() {
 
             touch = true;
-
-            opened = true;
 
             info.open(this.map, this);
         });
@@ -364,8 +342,6 @@
 
                 return;
             }
-
-            opened = true;
 
             info.open(this.map, this);
         });
@@ -411,7 +387,6 @@
      *
      * name (String) - název stylu
      * modifier (Function) - funkce pro úpravu stylu
-     *
      */
     GoogleMap.getStyles = function (name, modifier) {
 
@@ -528,7 +503,7 @@
         };
 
         /*
-         * Následující funkce volají stejnojmenné funkce jQuery na nejvyšším elementu HTML.
+         * Následující funkce volají stejnojmenné funkce jQuery (kromě show/hide, které fungují jako fadeIn/fadeOut) na nejvyšším elementu HTML.
          */
         GoogleMapHTMLOverlay.prototype.show = function() {
 
