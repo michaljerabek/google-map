@@ -1,5 +1,5 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery, google*/
+/*global jQuery, google, GoogleMap*/
 (function ($) {
 
     /**
@@ -7,7 +7,7 @@
      *
      * K GoogleMaps.onInit lze přiřadit funkci, která se spustí při inicializaci.
      */
-    var GoogleMaps = (function GoogleMaps() {
+    var GoogleMaps = window.GoogleMaps = (function GoogleMaps() {
 
         var maps = [],
 
@@ -20,7 +20,7 @@
              * */
             addMap = function (map) {
 
-                if (!(map instanceof window.GoogleMap)) {
+                if (!(map instanceof GoogleMap)) {
 
                     return false;
                 }
@@ -61,18 +61,17 @@
             google.maps.event.addDomListener(window, "load", init);
         };
 
-        window.GoogleMaps = {
+        return {
             //window.GoogleMaps.onInit
             addMap: addMap
         };
-
-        return window.GoogleMaps;
 
     }());
 
     GoogleMaps.$EVENT = $({});
 
 }(jQuery));
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global jQuery, google, HTMLElement, GoogleMapHTMLOverlay, GoogleMaps, GoogleMapStyle*/
 
@@ -414,6 +413,7 @@
 
 
 }(jQuery));
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global jQuery, google, GoogleMaps*/
 
@@ -425,7 +425,7 @@
      * map - instance Map
      * html (String | HTMLElement) - HTML obsah
      * position - [1, 1] | LatLng | Marker - suřadnice, kam HTML vložit (pokud není nastaveno, použije se location mapy)
-     * drawFn (Function) - vlastní funkce pro vykreslení mapy
+     * drawFn (Function) - vlastní funkce pro vykreslení HTML na mapě
      */
     var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn) {
 
@@ -461,7 +461,7 @@
         this.setMap(map);
     };
 
-    /*Prototype GoogleMapHTMLOverlay je potřeba nastavit až po inicializace, protože potřebujeme globální objekt google.*/
+    /*Prototype GoogleMapHTMLOverlay je potřeba nastavit až po inicializaci, protože potřebujeme globální objekt google.*/
     GoogleMaps.$EVENT.on("googleMapInit.GoogleMap", function () {
 
         GoogleMapHTMLOverlay.prototype = new google.maps.OverlayView();
@@ -543,6 +543,7 @@
 
 
 }(jQuery));
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global jQuery*/
 
@@ -900,6 +901,7 @@
 
 
 }(jQuery));
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMap*/
 
