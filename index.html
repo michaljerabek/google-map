@@ -25,6 +25,8 @@
     <div id="map3" class="map"></div>
     <div id="map4" class="map"></div>
     <div id="map5" class="map"></div>
+    <div id="map6" class="map"></div>
+    <div id="map7" class="map"></div>
 
     <script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
 
@@ -45,7 +47,7 @@
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale"),
+            styles: GoogleMap.getStyles("grayscale"),
             onInit: function () {
                 console.log("#map initialized!");
             }
@@ -61,25 +63,11 @@
             el: "#map2",
             icon: "marker2.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale", function (styles) {
+            styles: GoogleMap.getStyles("grayscale", function () {
 
-                styles.push({
-                    elementType: "all",
-                    stylers: [
-                        {
-                            gamma: 0.35
-                        }
-                    ]
-                });
-
-                styles.forEach(function (style) {
-
-                    if (style.featureType === "water" && style.elementType === "geometry") {
-
-                        style.stylers.push({
-                            lightness: 40
-                        });
-                    }
+                this.add("all", "all", {
+                    gamma: 0.3,
+                    lightness: 30
                 });
             }),
             info: "Ahoj, tady je New York!"
@@ -95,7 +83,7 @@
             el: "#map3",
             icon: "marker3.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale-inverse")
+            styles: GoogleMap.getStyles("grayscale-inverse")
         });
 
         map3.addMarker({
@@ -109,26 +97,34 @@
             el: "#map4",
             icon: "marker4.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale-inverse", function (styles) {
 
-                styles.forEach(function (style) {
+            styles: GoogleMap.getStyles("grayscale-inverse", function () {
 
-                    if (style.elementType === "labels.text.fill") {
-
-                        style.stylers[0].color = "#dc143c";
-                    }
+                this.set("all", "all", {
+                    gamma: 0.75
                 });
-            })
-        });
 
-        var marker = map4.addMarker({
-            icon: "marker2.png",
-            coords: [40.705565, -74.1380853]
-        });
+                this.all(null, "labels.text.fill", {
+                    color: "#dc143c"
+                });
 
-        map4.addInfo({
-            content: "Dobrý den!",
-            marker: marker
+                this.all("road", "labels.text.fill", {
+                    color: "#fa8072"
+                });
+            }),
+
+            onInit: function () {
+
+                var marker = map4.addMarker({
+                    icon: "marker2.png",
+                    coords: [40.705565, -74.1380853]
+                });
+
+                map4.addInfo({
+                    content: "Dobrý den!",
+                    marker: marker
+                });
+            }
         });
 
 
@@ -145,8 +141,61 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.STYLE("grayscale"),
+            styles: GoogleMap.getStyles("grayscale"),
             controls: true
+        });
+
+        var map6 = new GoogleMap({
+            el: "#map6",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("grayscale")
+        });
+
+        var html6 = [
+            "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px'>",
+                "<h3 style='color: crimson'>Tady je New York!</h3>",
+                "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+            "</div>"
+        ].join();
+
+        var html = map6.addHTML(html6);
+
+
+        var map7 = new GoogleMap({
+            el: "#map7",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("grayscale"),
+
+            html: [
+                {
+                    coords: [40.705565, -74.0880853],
+                    html: [
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px'>",
+                            "<h3 style='color: crimson'>Tady je New York!</h3>",
+                            "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                            "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+                        "</div>"
+                    ].join()
+                },
+                {
+                    coords: [40.705565, -74.1480853],
+                    html: [
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px'>",
+                            "<h3 style='color: deepskyblue'>Tady je New York!</h3>",
+                            "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                            "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+                        "</div>"
+                    ].join(),
+
+                    draw: function () {
+
+                        GoogleMapHTMLOverlay.prototype.draw.apply(this, arguments);
+
+                        this.$el.css("opacity", 0.75);
+                    }
+                }
+            ]
         });
 
     </script>
