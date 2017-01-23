@@ -32,40 +32,46 @@
 
     <!-- ---------------------------------------------------------------------------------------------------- !! callback=googleMapsInit !! -->
     <script defer async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_hHC_U83qwSgTWlK4rEC5xfNInW-KOAI&callback=googleMapsInit"></script>
+    <!-- funguje to i bez API klíče, ale nevím, jestli to nemá nějaká omezení -->
 
     <script src="GoogleMap.js"></script>
     <script src="styles/grayscale.js"></script>
     <script src="styles/grayscale-inverse.js"></script>
 
-    <script>/*global GoogleMap, GoogleMaps*/
+    <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
 
+        /*funkce se zavolá po kontaktování serveru Googlu*/
         GoogleMaps.onInit = function () {
             console.log("GoogleMaps initialized!");
         };
 
+
+        /*Základní mapa. Info se přidává až po inicializaci.*/
         var map = new GoogleMap({
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
             styles: GoogleMap.getStyles("grayscale"),
             onInit: function () {
+
                 console.log("#map initialized!");
+
+                map.addInfo({
+                    content: "Nazdárek!",
+                    marker: this.markers[0]
+                });
             }
         });
 
-        map.addInfo({
-            content: "Nazdárek!",
-            marker: map.markers[0]
-        });
-
-
+        /*Základní mapa s upraveným stylem.*/
         var map2 = new GoogleMap({
             el: "#map2",
             icon: "marker2.png",
             coords: [40.705565, -74.1180853],
             styles: GoogleMap.getStyles("grayscale", function () {
 
-                this.add("all", "all", {
+                /*Úprava kontrastu všech prvků.*/
+                this.set("all", "all", {
                     gamma: 0.3,
                     lightness: 30
                 });
@@ -79,6 +85,7 @@
         });
 
 
+        /*Mapa s inverzním černobílým stylem.*/
         var map3 = new GoogleMap({
             el: "#map3",
             icon: "marker3.png",
@@ -86,6 +93,7 @@
             styles: GoogleMap.getStyles("grayscale-inverse")
         });
 
+        /*Pridání markeru i s infem.*/
         map3.addMarker({
             icon: "marker.png",
             coords: [40.705565, -74.1380853],
@@ -93,6 +101,7 @@
         });
 
 
+        /*Mapa s upraveným stylem. Přidává se marker až po inicilizaci a info k němu až po jeho vytvoření.*/
         var map4 = new GoogleMap({
             el: "#map4",
             icon: "marker4.png",
@@ -100,14 +109,17 @@
 
             styles: GoogleMap.getStyles("grayscale-inverse", function () {
 
+                /*Snížit všemu gammu.*/
                 this.set("all", "all", {
                     gamma: 0.75
                 });
 
+                /*Všechny výplně textu (obsažené ve stylu) se přepíší na růžovou.*/
                 this.all(null, "labels.text.fill", {
                     color: "#dc143c"
                 });
 
+                /*Všechny výplně textu, které označují silnice (obsažené ve stylu), se přepíší na oranžovou.*/
                 this.all("road", "labels.text.fill", {
                     color: "#fa8072"
                 });
@@ -115,12 +127,12 @@
 
             onInit: function () {
 
-                var marker = map4.addMarker({
+                var marker = this.addMarker({
                     icon: "marker2.png",
                     coords: [40.705565, -74.1380853]
                 });
 
-                map4.addInfo({
+                this.addInfo({
                     content: "Dobrý den!",
                     marker: marker
                 });
@@ -128,6 +140,7 @@
         });
 
 
+        /*Mapa s více markery a s ovládacími prvky.*/
         var map5 = new GoogleMap({
             el: "#map5",
             icon: "marker4.png",
@@ -145,6 +158,8 @@
             controls: true
         });
 
+
+        /*Mapa s vlastním HTML obsahem.*/
         var map6 = new GoogleMap({
             el: "#map6",
             coords: [40.705565, -74.1180853],
@@ -159,9 +174,10 @@
             "</div>"
         ].join();
 
+        /*Proměná html bude undefined, protože mapa ještě není inicialozovaná. HTML je po inicializace možné najít v map6.HTMLs.*/
         var html = map6.addHTML(html6);
 
-
+        /*Mapa s několika HTML boxy.*/
         var map7 = new GoogleMap({
             el: "#map7",
             coords: [40.705565, -74.1180853],
@@ -188,8 +204,10 @@
                         "</div>"
                     ].join(),
 
+                    /*Vlastní vykraslovací funkce. Třeba protože potřebujeme HTML vykreslit jinde než uprostřed nad souřadnicemi.*/
                     draw: function () {
 
+                        /*Původní funkce draw.*/
                         GoogleMapHTMLOverlay.prototype.draw.apply(this, arguments);
 
                         this.$el.css("opacity", 0.75);

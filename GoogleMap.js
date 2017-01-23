@@ -1,26 +1,11 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery, google*/
+/*global jQuery, google, HTMLElement*/
 
 (function ($) {
 
-    /*
-     * {
-     *     el: "#map",
-     *     coords: [50.0879712, 14.4172372],
-     *     icon: "marker.png",
-     *     markers: [{icon: "marker.png", coords: []}],
-     *     addMarker: false,
-     *     html: "" | HTMLElement | {html: "", coords: [], draw: function} || [...]
-     *     zoom: 14,
-     *     styles: [],
-     *     info: "",
-     *     options: {},
-     *     controls: false
-     * }
-     * */
-
     var $EVENT = $({}),
 
+        /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
         DEFAUlTS = {
             el: "#map",
 
@@ -29,12 +14,22 @@
             styles: []
         },
 
+        /**
+         * Zajišťuje inicializaci map po spojení s Googlem.
+         *
+         * K GoogleMaps.onInit lze přiřadit funkci, která se spustí při inicializaci.
+         */
         GoogleMaps = (function GoogleMaps() {
 
             var maps = [],
 
                 initialized = false,
 
+                /*
+                 * Přidá novou GoogleMap a inicializuje ji, pokud již byly Google Maps inicializovány.
+                 *
+                 * map - instance GoogleMap.
+                 * */
                 addMap = function (map) {
 
                     if (!(map instanceof window.GoogleMap)) {
@@ -52,6 +47,9 @@
                     return map;
                 },
 
+                /**
+                 * Inicializuje připravené GoogleMapy.
+                 */
                 init = function () {
 
                     maps.forEach(function (map) {
@@ -62,6 +60,7 @@
                     initialized = true;
                 };
 
+            /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
             window.googleMapsInit = function googleMapsInit() {
 
                 $EVENT.trigger("googleMapInit.GoogleMap");
@@ -83,11 +82,30 @@
 
         }()),
 
+
+        /*
+         * Vytvoří novou mapu.
+         *
+         * options - {
+         *     el: "#map", - element, do kterého se vloží mapa
+         *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
+         *     icon: "marker.png", - obrázek pro vlastní pin
+         *     markers: [{icon: "marker.png", coords: [], info: "", options: {}}], - více vlastních pinů
+         *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
+         *     html: "" | HTMLElement | {html: "" | HTMLElement, coords: [] | Marker | LatLng, draw: function} | [...] - html obsah na mapě
+         *     zoom: 14, - přiblížení mapy
+         *     styles: [] | GoogleMapStyle, - styl mapy
+         *     info: "", - informace zobrazující se u výchozího markeru
+         *     options: {}, - nastavení přidávající k mapě další nastavení
+         *     controls: false - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
+         * }
+         * */
+
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
 
             if (typeof options !== "object") {
 
-                throw "Options required: {el: \"#map\", coords: [50.0879712, 14.4172372], icon: \"marker.png\", zoom: 14, mapOptions: {}, info: \"\"}";
+                throw "Options required.";
             }
 
             this.options = options;
@@ -120,7 +138,7 @@
             this._infos = [];
             this.infos = [];
             this._htmls = [];
-            this.htmls = [];
+            this.HTMLs = [];
 
             GoogleMaps.addMap(this);
         };
@@ -134,15 +152,26 @@
         return [];
     };
 
+    /**
+     * Inicializuje mapu včetně markerů, infoboxů a html.
+     */
     GoogleMap.prototype.init = function () {
 
         this.$el = this.options.el.jquery ? this.options.el : $(this.options.el);
         this.el = this.$el[0];
 
         var mapOptions = {
-            zoom: this.options.zoom,
-            location: new google.maps.LatLng(this.options.coords[0], this.options.coords[1])
+            zoom: this.options.zoom
         };
+
+        if (this.options.coords instanceof google.maps.LatLng) {
+
+            mapOptions.location = this.options.coords;
+
+        } else {
+
+            mapOptions.location = new google.maps.LatLng(this.options.coords[0], this.options.coords[1]);
+        }
 
         if (this.options.styles instanceof window.GoogleMapStyle) {
 
@@ -168,11 +197,6 @@
         if (this.options.options) {
 
             mapOptions = $.extend({}, mapOptions, this.options.options);
-        }
-
-        if (typeof this.options.onInit === "function") {
-
-            this.options.onInit(mapOptions);
         }
 
         this.map = new google.maps.Map(this.el, mapOptions);
@@ -225,8 +249,25 @@
             this.addHTML(options);
 
         }.bind(this));
+
+
+        if (typeof this.options.onInit === "function") {
+
+            this.options.onInit.call(this);
+        }
     };
 
+    /**
+     * Přidá k mapě marker. Pokud je mapa inicializovaná vrátí instanci Markeru.
+     * Všechny markery jsou v instance.markers.
+     *
+     * options - {
+     *     coords: [1, 1] | LatLng, - souřadnice markeru
+     *     icon: "marker.png", - ikona markeru
+     *     options: {}, - ostatní nastavení markeru
+     *     info: "" - informace zobrazované u markeru
+     * }
+     */
     GoogleMap.prototype.addMarker = function (options) {
 
         options = options || {};
@@ -269,6 +310,16 @@
         return marker;
     };
 
+    /**
+     * Přidá informace k markeru. Pokud je mapa inicializovaná vrátí instanci InfoWindow.
+     * Info se zobrazuje při kliknutí (a touchend) na pin. Všechny info jsou v instance.infos.
+     *
+     * options - {
+     *     content: "", - obsah
+     *     options: {}, - další nastavení
+     *     marker: Marker - marker, ke kterému se má info přiřadit (pokud není nastaveno použije se poslední)
+     * }
+     */
     GoogleMap.prototype.addInfo = function (options) {
 
         options = options || {};
@@ -324,6 +375,16 @@
         return info;
     };
 
+    /**
+     * Přidá do mapy vlastní HTML obsah. Pokud je mapa inicializovaná vrátí instanci GoogleMapHTMLOverlay.
+     * Všechny HTML jsou v instance.HTMLs.
+     *
+     * options - "<div></div>" | {
+     *     html: "" | HTMLElement, - vlastní HTML obsah
+     *     coords: [1, 1] | LatLng | Marker, - souřadnice, kam vložit HTML (pokud není nastaveno, použije se location mapy)
+     *     draw: function - vlastní funkce zajišťující vykreslení HTML
+     * }
+     */
     GoogleMap.prototype.addHTML = function (options) {
 
         if (!this.initialized) {
@@ -339,11 +400,19 @@
 
             overlay = new GoogleMapHTMLOverlay(this.map, html, position, draw);
 
-        this.htmls.push(overlay);
+        this.HTMLs.push(overlay);
 
         return overlay;
     };
 
+    /**
+     * Varátí styl podle jména. Pokud styl neexistuje, vrátí styl "empty".
+     * Vrací instanci GoogleMapStyle.
+     *
+     * name (String) - název stylu
+     * modifier (Function) - funkce pro úpravu stylu
+     *
+     */
     GoogleMap.getStyles = function (name, modifier) {
 
         var style;
@@ -365,6 +434,14 @@
         return style;
     };
 
+    /**
+     * Třída zajišťující vložení vlastního HTML do mapy.
+     *
+     * map - instance Map
+     * html (String | HTMLElement) - HTML obsah
+     * position - [1, 1] | LatLng | Marker - suřadnice, kam HTML vložit (pokud není nastaveno, použije se location mapy)
+     * drawFn (Function) - vlastní funkce pro vykreslení mapy
+     */
     var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn) {
 
             this.html = html;
@@ -399,10 +476,14 @@
             this.setMap(map);
         };
 
+    /*Prototype GoogleMapHTMLOverlay je potřeba nastavit až po inicializace, protože potřebujeme globální objekt google.*/
     $EVENT.on("googleMapInit.GoogleMap", function () {
 
         GoogleMapHTMLOverlay.prototype = new google.maps.OverlayView();
 
+        /*
+         * Povinná metoda pro přidání mapy.
+         * */
         GoogleMapHTMLOverlay.prototype.onAdd = function() {
 
             var panes = this.getPanes();
@@ -417,6 +498,10 @@
             this.el = this.$el[0];
         };
 
+        /*
+         * Povinná metoda pro vykreslení mapy.
+         * Zarovná HTML doprostřed nad souřadnice.
+         * */
         GoogleMapHTMLOverlay.prototype.draw = function() {
 
             var overlayProjection = this.getProjection(),
@@ -431,6 +516,9 @@
             this.el.style.top = (position.y - size.height) + "px";
         };
 
+        /*
+         * Povinná metoda pro odstranění HTML.
+         */
         GoogleMapHTMLOverlay.prototype.onRemove = function() {
 
             this.$el.remove();
@@ -439,6 +527,9 @@
             this.el = null;
         };
 
+        /*
+         * Následující funkce volají stejnojmenné funkce jQuery na nejvyšším elementu HTML.
+         */
         GoogleMapHTMLOverlay.prototype.show = function() {
 
             return this.$el.fadeIn.apply(this.$el, arguments);
@@ -465,11 +556,28 @@
         };
     });
 
+    /**
+     * Třída obsahující styly pro mapu. Obsahuje jednoduché API pro upravování stylu.
+     *
+     * styles (Array) - styly pro mapu: https://developers.google.com/maps/documentation/javascript/style-reference
+     */
     var GoogleMapStyle = window.GoogleMapStyle = function GoogleMapStyle(styles) {
 
         this.styles = styles || [];
     };
 
+    /**
+     * Nastaví styly pro zadaný featureType a elementType. Pokud existuje, přepíše se. Jinak se vytvoří nový styl.
+     * https://developers.google.com/maps/documentation/javascript/style-reference
+     *
+     * featureType (String) - nastavovaná vlastnost
+     * elementType (String) - nastavovaný element
+     * styles - {
+     *     color: "#fff000",
+     *     lightness: 20
+     * }
+     * unsetSubtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     */
     GoogleMapStyle.prototype.set = function (featureType, elementType, styles, unsetSubtypes) {
 
         var styleFound = false;
@@ -505,6 +613,19 @@
         }
     };
 
+    /**
+     * Přepíše styly pro zadaný elementType ve všech featureType. Pokud je featureType false nebo "all", přenastaví se u všech,
+     * které odpovídají elementType. Pokud je featureType zadán, přenastaví se i všechny podtypy.
+     * https://developers.google.com/maps/documentation/javascript/style-reference
+     *
+     * featureType (String) - nastavovaná vlastnost
+     * elementType (String) - nastavovaný element
+     * styles - {
+     *     color: "#fff000",
+     *     lightness: 20
+     * }
+     * unsetSubtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     */
     GoogleMapStyle.prototype.all = function (featureType, elementType, styles, unsetSubtypes) {
 
         this.each(function (style) {
@@ -525,6 +646,18 @@
         }
     };
 
+    /**
+     * Odstraní všechy styly pro zadaný featureType a elementType.
+     * https://developers.google.com/maps/documentation/javascript/style-reference
+     *
+     * featureType (String) - odstraňovaná vlastnost
+     * elementType (String) - odstraňovaný element
+     * styles - {
+     *     color: "#fff000",
+     *     lightness: 20
+     * }
+     * subtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     */
     GoogleMapStyle.prototype.unset = function (featureType, elementType, subtypes) {
 
         this.each(function (style, i) {
@@ -547,6 +680,19 @@
         }
     };
 
+    /**
+     * Přidá styly k zadanému featureType a elementType. Pokud kombinace neexistuje, vytvoří se nový styl.
+     * Pokud vlastnost již u stylu je, přepíše se.
+     * https://developers.google.com/maps/documentation/javascript/style-reference
+     *
+     * featureType (String) - nastavovaná vlastnost
+     * elementType (String) - nastavovaný element
+     * styles - {
+     *     color: "#fff000",
+     *     lightness: 20
+     * }
+     * removeSubtypes (Boolean) - odstraní všechny styly specifikované ve styles, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     */
     GoogleMapStyle.prototype.add = function (featureType, elementType, styles, removeSubtypes) {
 
         var styleFound = false;
@@ -598,12 +744,21 @@
 
             this.findSubtypes(featureType, elementType).forEach(function (style) {
 
-                this.remove(style.featureType, style.elementType, styles);
+                this.remove(style.featureType, style.elementType, Object.keys(styles));
 
             }.bind(this));
         }
     };
 
+    /**
+     * Odstraní styly patřící k featureType a elementType.
+     * https://developers.google.com/maps/documentation/javascript/style-reference
+     *
+     * featureType (String) - vlastnost, ze které se styl odsraňuje
+     * elementType (String) - element, ze kterého se styl odsraňuje
+     * styles (String | Array) - styly, které se mají odstranit
+     * subtypes (Boolean) - odstraní všechny styly specifikované ve styles, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     */
     GoogleMapStyle.prototype.remove = function (featureType, elementType, styles, subtypes) {
 
         styles = typeof styles === "string" ? [styles] : styles;
@@ -653,6 +808,9 @@
         }
     };
 
+    /**
+     * Převede objekt se styly na stylery vyžadované Google Maps API.
+     */
     GoogleMapStyle.prototype.toStylers = function (styles) {
 
         var stylers = [];
@@ -669,6 +827,15 @@
         return stylers;
     };
 
+    /**
+     * Vyhledá všechny podtypy pro featureType a elementType a vrátí je v poli.
+     * Logika je komplikovaná, ale asi ne moc geniální. FeatureType je považován za
+     * důležitější než elementType, takže pokud není featureType zadán, pak podtypy
+     * elementTypu, které jsou zároveň přiřazeny k featureType nejsou považovány za podtyp.
+     *
+     * featureType (String) - vlastnost, podle které se hledá podtyp
+     * elementType (String) - element, podle kterého se hledá podtyp
+     */
     GoogleMapStyle.prototype.findSubtypes = function (featureType, elementType) {
 
         var substyles = [],
@@ -720,11 +887,19 @@
         return substyles;
     };
 
+    /**
+     * Spustí funkci pro každý styl.
+     *
+     * fn (Function)
+     */
     GoogleMapStyle.prototype.each = function (fn) {
 
         this.getStyles().forEach(fn.bind(this));
     };
 
+    /**
+     * Vratí pole se styly.
+     */
     GoogleMapStyle.prototype.getStyles = function () {
 
         return this.styles;
