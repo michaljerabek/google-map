@@ -77,8 +77,8 @@
 
                 position = overlayProjection.fromLatLngToDivPixel(this.position),
                 size = {
-                    width: this.$el.outerWidth(),
-                    height: this.$el.outerHeight()
+                    width: this.el.offsetWidth,
+                    height: this.el.offsetHeight
                 };
 
             this.el.style.left = (position.x - (size.width / 2)) + "px";
@@ -122,6 +122,21 @@
         GoogleMapHTMLOverlay.prototype.find = function() {
 
             return this.$el.find.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.addClass = function() {
+
+            return this.$el.addClass.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.removeClass = function() {
+
+            return this.$el.removeClass.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.hasClass = function() {
+
+            return this.$el.hasClass.apply(this.$el, arguments);
         };
     });
 
