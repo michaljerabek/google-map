@@ -99,14 +99,31 @@
         /*
          * Následující funkce volají stejnojmenné funkce jQuery (kromě show/hide, které fungují jako fadeIn/fadeOut) na nejvyšším elementu HTML.
          */
-        GoogleMapHTMLOverlay.prototype.show = function() {
 
-            return this.$el.fadeIn.apply(this.$el, arguments);
+        /*pokud je animate false, duration se nastaví na 0*/
+        GoogleMapHTMLOverlay.prototype.show = function(animate) {
+
+            var args = Array.prototype.slice.call(arguments);
+
+            if (animate === false) {
+
+                args[0] = 0;
+            }
+
+            return this.$el.fadeIn.apply(this.$el, args);
         };
 
-        GoogleMapHTMLOverlay.prototype.hide = function() {
+        /*pokud je animate false, duration se nastaví na 0*/
+        GoogleMapHTMLOverlay.prototype.hide = function(animate) {
 
-            return this.$el.fadeOut.apply(this.$el, arguments);
+            var args = Array.prototype.slice.call(arguments);
+
+            if (animate === false) {
+
+                args[0] = 0;
+            }
+
+            return this.$el.fadeOut.apply(this.$el, args);
         };
 
         GoogleMapHTMLOverlay.prototype.animate = function() {

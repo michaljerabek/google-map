@@ -34,7 +34,7 @@
     <script defer async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_hHC_U83qwSgTWlK4rEC5xfNInW-KOAI&callback=googleMapsInit"></script>
     <!-- funguje to i bez API klíče, ale nevím, jestli to nemá nějaká omezení -->
 
-    <script src="src/GoogleMapS.js"></script>
+    <script src="src/GoogleMaps.js"></script>
     <script src="src/GoogleMap.js"></script>
     <script src="src/GoogleMapHTMLOverlay.js"></script>
     <script src="src/GoogleMapStyle.js"></script>
@@ -60,7 +60,7 @@
 
                 map.addInfo({
                     content: "Nazdárek!",
-                    marker: this.markers[0]
+                    marker: this.markers[this.markerId] //id markeru zadaného při inicializaci; id infa nebude v this.infoId, protože bylo přidáno až po inicializaci
                 });
             }
         });
@@ -97,11 +97,20 @@
 
         /*Pridání markeru i s infem.*/
         map3.addMarker({
+            id: "ID",
             icon: "marker.png",
             coords: [40.705565, -74.1380853],
-            info: "Zdravíme!"
+            info: "Zdravíme!",
+            infoId: "ID"
         });
 
+        setTimeout(function() {
+
+            if (map3.initialized) {
+
+                console.log(map3.getInfo("ID"), map3.getMarker("ID"));
+            }
+        }, 2000);
 
         /*Mapa s upraveným stylem. Přidává se marker až po inicilizaci a info k němu až po jeho vytvoření.*/
         var map4 = new GoogleMap({
@@ -132,7 +141,7 @@
                 var marker = this.addMarker({
                     icon: "marker2.png",
                     coords: [40.705565, -74.1380853]
-                });
+                }, true); //vrátí instanci místo id
 
                 this.addInfo({
                     content: "Dobrý den!",
@@ -176,8 +185,16 @@
             "</div>"
         ].join();
 
-        /*Proměná html bude undefined, protože mapa ještě není inicialozovaná. HTML je po inicializaci možné najít v map6.HTMLs.*/
+        /*Proměná html bude id HTML.*/
         var html = map6.addHTML(html6);
+
+        setTimeout(function() {
+
+            if (map6.initialized) {
+
+                console.log(map6.getHTML(html));
+            }
+        }, 2000);
 
         /*Mapa s několika HTML boxy.*/
         var map7 = new GoogleMap({
