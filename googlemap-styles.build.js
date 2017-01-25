@@ -135,6 +135,10 @@
             this.$el = null;
             this.map = null;
 
+            this._idHTMLCounter = 0;
+            this._idMarkerCounter = 0;
+            this._idInfoCounter = 0;
+
             this._markers = [];
             this._infos = [];
             this._htmls = [];
@@ -150,17 +154,13 @@
             GoogleMaps.addMap(this);
         },
 
-        idHTMLCounter = 0,
-        idMarkerCounter = 0,
-        idInfoCounter = 0,
-
         generateId = function (type) {
 
             switch (type) {
 
-                case "HTML"  : return !this.HTMLs[++idHTMLCounter]     ? idHTMLCounter   : generateId.call(this, type);
-                case "Marker": return !this.markers[++idMarkerCounter] ? idMarkerCounter : generateId.call(this, type);
-                case "Info"  : return !this.infos[++idInfoCounter]     ? idInfoCounter   : generateId.call(this, type);
+                case "HTML"  : return !this.HTMLs[++this._idHTMLCounter]     ? this._idHTMLCounter   : generateId.call(this, type);
+                case "Marker": return !this.markers[++this._idMarkerCounter] ? this._idMarkerCounter : generateId.call(this, type);
+                case "Info"  : return !this.infos[++this._idInfoCounter]     ? this._idInfoCounter   : generateId.call(this, type);
             }
         };
 
