@@ -81,10 +81,10 @@
      * Vytvoří novou mapu.
      *
      * options - {
-     *     el: "#map", - element, do kterého se vloží mapa
+     *     el: "#map" | $() | HTMLElement, - element, do kterého se vloží mapa
      *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
      *     icon: "marker.png", - obrázek pro vlastní pin
-     *     markers: [{icon: "marker.png", coords: [], info: "", options: {}}], - více vlastních pinů
+     *     markers: [{icon: "marker.png", coords: [], info: "", options: {}, id: "" | 0}], - více vlastních pinů
      *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
      *     html: "" | HTMLElement | {html: "" | HTMLElement, coords: [] | Marker | LatLng, draw: function} | [...] - html obsah na mapě
      *     zoom: 14, - přiblížení mapy
@@ -134,14 +134,34 @@
             this.el = null;
             this.$el = null;
             this.map = null;
-            this.markers = [];
+
+            this._idHTMLCounter = 0;
+            this._idMarkerCounter = 0;
+            this._idInfoCounter = 0;
+
             this._markers = [];
             this._infos = [];
-            this.infos = [];
             this._htmls = [];
-            this.HTMLs = [];
+
+            this.markers = {};
+            this.infos = {};
+            this.HTMLs = {};
+
+            this.markerId = null;
+            this.infoId = null;
+            this.HTMLId = null;
 
             GoogleMaps.addMap(this);
+        },
+
+        generateId = function (type) {
+
+            switch (type) {
+
+                case "HTML"  : return !this.HTMLs[++this._idHTMLCounter]     ? this._idHTMLCounter   : generateId.call(this, type);
+                case "Marker": return !this.markers[++this._idMarkerCounter] ? this._idMarkerCounter : generateId.call(this, type);
+                case "Info"  : return !this.infos[++this._idInfoCounter]     ? this._idInfoCounter   : generateId.call(this, type);
+            }
         };
 
     GoogleMap.DEFAULTS = DEFAUlTS;
@@ -211,10 +231,19 @@
 
         } else if (this.options.icon || this.options.addMarker) {
 
+            this.markerId = generateId.call(this, "Marker");
+
+            if (this.options.info) {
+
+                this.infoId = generateId.call(this, "Info");
+            }
+
             this.addMarker({
                 coords: mapOptions.location,
                 icon: this.options.icon,
-                info: this.options.info
+                info: this.options.info,
+                infoId: this.options.infoId,
+                id: this.markerId
             });
         }
 
@@ -226,7 +255,12 @@
 
             } else {
 
-                this.addHTML(this.options.html);
+                this.HTMLId = generateId.call(this, "HTML");
+
+                this.addHTML({
+                    html: this.options.html,
+                    id: this.HTMLId
+                });
             }
         }
 
@@ -249,17 +283,24 @@
      *     icon: "marker.png", - ikona markeru
      *     options: {}, - ostatní nastavení markeru
      *     info: "" - informace zobrazované u markeru
+     *     id: id Markeru, podle kterého je možné najít příslušný objekt
+     *     infoId: id Infa, podle kterého je možné najít příslušný objekt
      * }
+     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addMarker = function (options) {
+    GoogleMap.prototype.addMarker = function (options, returnInstance) {
 
         options = options || {};
 
+        var id = options.id || generateId.call(this, "Marker");
+
         if (!this.initialized) {
+
+            options.id = options.id || id;
 
             this._markers.push(options);
 
-            return;
+            return returnInstance ? null : id;
         }
 
         if (options.coords && !(options.coords instanceof google.maps.LatLng)) {
@@ -284,13 +325,24 @@
 
             this.addInfo({
                 content: options.info,
-                marker: marker
+                marker: marker,
+                id: options.infoId
             });
         }
 
-        this.markers.push(marker);
+        this.markers[id] = marker;
 
-        return marker;
+        return returnInstance ? marker : id;
+    };
+
+    /**
+     * Vrátí instanci InfoWindow podle id.
+     *
+     * id - id Markeru
+     */
+    GoogleMap.prototype.getMarker = function (id) {
+
+        return this.markers[id] || null;
     };
 
     /**
@@ -301,17 +353,23 @@
      *     content: "", - obsah
      *     options: {}, - další nastavení
      *     marker: Marker - marker, ke kterému se má info přiřadit (pokud není nastaveno použije se poslední)
+     *     id: id Infa, podle kterého je možné najít příslušný objekt
      * }
+     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addInfo = function (options) {
+    GoogleMap.prototype.addInfo = function (options, returnInstance) {
 
         options = options || {};
 
+        var id = options.id || generateId.call(this, "Info");
+
         if (!this.initialized) {
+
+            options.id = options.id || id;
 
             this._infos.push(options);
 
-            return;
+            return returnInstance ? null : id;
         }
 
         options.marker = options.marker || this.markers[this.markers.length - 1];
@@ -348,9 +406,19 @@
             info.open(this.map, this);
         });
 
-        this.infos.push(info);
+        this.infos[id] = info;
 
-        return info;
+        return returnInstance ? info : id;
+    };
+
+    /**
+     * Vrátí instanci InfoWindow podle id.
+     *
+     * id - id Infa
+     */
+    GoogleMap.prototype.getInfo = function (id) {
+
+        return this.infos[id] || null;
     };
 
     /**
@@ -360,16 +428,34 @@
      * options - "<div></div>" | {
      *     html: "" | HTMLElement, - vlastní HTML obsah
      *     coords: [1, 1] | LatLng | Marker, - souřadnice, kam vložit HTML (pokud není nastaveno, použije se location mapy)
-     *     draw: function - vlastní funkce zajišťující vykreslení HTML
+     *     draw: function, - vlastní funkce zajišťující vykreslení HTML
+     *     id: id HTML, podle kterého je možné najít příslušný objekt
      * }
+     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addHTML = function (options) {
+    GoogleMap.prototype.addHTML = function (options, returnInstance) {
+
+        options = options || {};
+
+        var id = options.id || generateId.call(this, "HTML");
 
         if (!this.initialized) {
 
+            if (typeof options === "string") {
+
+                options = {
+                    html: options,
+                    id: id
+                };
+
+            } else {
+
+                options.id = options.id || id;
+            }
+
             this._htmls.push(options);
 
-            return;
+            return returnInstance ? null : id;
         }
 
         var html = typeof options === "string" || options instanceof HTMLElement ? options : options.html,
@@ -378,9 +464,19 @@
 
             overlay = new GoogleMapHTMLOverlay(this.map, html, position, draw);
 
-        this.HTMLs.push(overlay);
+        this.HTMLs[id] = overlay;
 
-        return overlay;
+        return returnInstance ? overlay : id;
+    };
+
+    /**
+     * Vrátí instanci GoogleMapHTMLOverlay podle id.
+     *
+     * id - id HTML
+     */
+    GoogleMap.prototype.getHTML = function (id) {
+
+        return this.HTMLs[id] || null;
     };
 
     /**
@@ -493,8 +589,8 @@
 
                 position = overlayProjection.fromLatLngToDivPixel(this.position),
                 size = {
-                    width: this.$el.outerWidth(),
-                    height: this.$el.outerHeight()
+                    width: this.el.offsetWidth,
+                    height: this.el.offsetHeight
                 };
 
             this.el.style.left = (position.x - (size.width / 2)) + "px";
@@ -515,14 +611,31 @@
         /*
          * Následující funkce volají stejnojmenné funkce jQuery (kromě show/hide, které fungují jako fadeIn/fadeOut) na nejvyšším elementu HTML.
          */
-        GoogleMapHTMLOverlay.prototype.show = function() {
 
-            return this.$el.fadeIn.apply(this.$el, arguments);
+        /*pokud je animate false, duration se nastaví na 0*/
+        GoogleMapHTMLOverlay.prototype.show = function(animate) {
+
+            var args = Array.prototype.slice.call(arguments);
+
+            if (animate === false) {
+
+                args[0] = 0;
+            }
+
+            return this.$el.fadeIn.apply(this.$el, args);
         };
 
-        GoogleMapHTMLOverlay.prototype.hide = function() {
+        /*pokud je animate false, duration se nastaví na 0*/
+        GoogleMapHTMLOverlay.prototype.hide = function(animate) {
 
-            return this.$el.fadeOut.apply(this.$el, arguments);
+            var args = Array.prototype.slice.call(arguments);
+
+            if (animate === false) {
+
+                args[0] = 0;
+            }
+
+            return this.$el.fadeOut.apply(this.$el, args);
         };
 
         GoogleMapHTMLOverlay.prototype.animate = function() {
@@ -538,6 +651,21 @@
         GoogleMapHTMLOverlay.prototype.find = function() {
 
             return this.$el.find.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.addClass = function() {
+
+            return this.$el.addClass.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.removeClass = function() {
+
+            return this.$el.removeClass.apply(this.$el, arguments);
+        };
+
+        GoogleMapHTMLOverlay.prototype.hasClass = function() {
+
+            return this.$el.hasClass.apply(this.$el, arguments);
         };
     });
 
