@@ -17,15 +17,17 @@
      *     styles: [] | GoogleMapStyle, - styl mapy
      *     info: "", - informace zobrazující se u výchozího markeru
      *     options: {}, - nastavení přidávající k mapě další nastavení
-     *     controls: false - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
+     *     controls: false, - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
+     *     centerLocationOnResize: 100 | true - vycentrovat mapu na coords při změně velikosti okna | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
      * }
      * */
     var DEFAUlTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
             el: "#map",
 
-            zoom: 13,
+            zoom: 14,
             controls: false,
-            styles: []
+            styles: [],
+            centerLocationOnResize: 100
         },
 
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
@@ -35,7 +37,7 @@
                 throw "Options required.";
             }
 
-            this.options = options;
+            this.options = $.extend({}, DEFAUlTS, options);
 
             if (!this.options.coords) {
 
@@ -148,6 +150,11 @@
         }
 
         this.map = new google.maps.Map(this.el, mapOptions);
+
+        if (this.options.centerLocationOnResize) {
+
+            this.initCenterLocationOnResize(this.options.centerLocationOnResize);
+        }
 
         this.initialized = true;
 
@@ -433,5 +440,45 @@
         return style;
     };
 
+    /**
+     * Při změně velikosti okna zarovná mapu na střed location.
+     *
+     * ms (Number) - debouncing
+     */
+    GoogleMap.prototype.initCenterLocationOnResize = function (ms) {
+
+        if (this.resizeInitialized) {
+
+            return;
+        }
+
+        var debounce = typeof ms === "number",
+
+            _this = this;
+
+        google.maps.event.addDomListener(window, "resize", function () {
+
+            if (debounce) {
+
+                clearTimeout(debounce);
+
+                debounce = setTimeout(_this.centerLocation.bind(_this), ms);
+
+                return;
+            }
+
+            _this.centerLocation();
+        });
+
+        this.resizeInitialized = true;
+    };
+
+    /**
+     * Zarovná mapu na střed location.
+     */
+    GoogleMap.prototype.centerLocation = function () {
+
+        this.map.setCenter(this.map.location);
+    };
 
 }(jQuery));
