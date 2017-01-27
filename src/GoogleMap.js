@@ -481,4 +481,25 @@
         this.map.setCenter(this.map.location);
     };
 
+    /**
+     * Přiřadí k mapě event listener a vrátí jeho instanci.
+     *
+     * type (String) - typ události (click, ...)
+     * cb (Function) - funkce, která se má spustit při události
+     */
+    GoogleMap.prototype.on = function (type, cb) {
+
+        return this.map.addListener(type, cb);
+    };
+
+    /*
+     * Odstraní z mapy event listener.
+     *
+     * listener - instance event listeneru
+     */
+    GoogleMap.prototype.off = function (listener) {
+
+        this.map.removeListener(listener);
+    };
+
 }(jQuery));
