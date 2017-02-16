@@ -629,7 +629,7 @@
     /**
      * Zvýrazní zadaný marker.
      *
-     * markerToHightlight (String, Marker) - id Markeru nebo Marker
+     * markerToHightlight (String, Marker, Boolean) - id Markeru nebo Marker; pokud je false, zvýraznění se zruší
      * opacity (Number) - jakou opacity mají mít ostatní markery
      * duration (Number) - délka animace
      * easing (String) - easing
@@ -653,10 +653,10 @@
 
                         if (typeof initOpacity[m] !== "number") {
 
-                            initOpacity[m] = typeof marker.getOpacity() === "number" ? marker.getOpacity() : 1;
+                            initOpacity[m] = typeof marker.getOpacity() === "number" ? marker.getOpacity() : marker.getVisible() ? 1 : 0;
                         }
 
-                        var targetOpacity = marker !== markerToHightlight ? opacity : 1,
+                        var targetOpacity = marker !== markerToHightlight && markerToHightlight !== false ? opacity : 1,
 
                             toAnimate = initOpacity[m] - targetOpacity;
 
@@ -687,11 +687,11 @@
 
             if (opacity) {
 
-                marker.setOpacity(marker === markerToHightlight ? 1 : opacity);
+                marker.setOpacity(marker === markerToHightlight || markerToHightlight === false ? 1 : opacity);
 
             } else {
 
-                marker.setVisible(marker === markerToHightlight);
+                marker.setVisible(marker === markerToHightlight || markerToHightlight === false);
             }
         });
     };
