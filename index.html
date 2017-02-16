@@ -41,6 +41,7 @@
     <script src="src/styles/grayscale-inverse.js"></script>
     <script src="src/styles/grayscale.js"></script>
     <script src="src/styles/monochrome.js"></script>
+    <script src="src/styles/monochrome-inverse.js"></script>
 <!--    <script src="googlemap-styles.build.min.js"></script>-->
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
@@ -186,7 +187,7 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("monochrome", function () {
+            styles: GoogleMap.getStyles("monochrome-inverse", function () {
 
                 this.set("all", "all", {
                     color: "#a36172",
@@ -203,7 +204,14 @@
         var map6 = new GoogleMap({
             el: "#map6",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("grayscale")
+            styles: GoogleMap.getStyles("monochrome", function () {
+
+                this.set("all", "all", {
+                    color: "#416b88",
+                    gamma: 0.3
+                });
+
+            }),
         });
 
         //asi je dobrý tam vždycky nastavit fixní rozměry (width/height)

@@ -1,7 +1,7 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMap*/
 
-GoogleMap.STYLES.monochrome = function () {
+GoogleMap.STYLES["monochrome-inverse"] = function () {
 
     return [
         {
@@ -30,7 +30,7 @@ GoogleMap.STYLES.monochrome = function () {
                     "visibility": "on"
                 },
                 {
-                    "lightness": 92
+                    "lightness": 8
                 }
             ]
         },
@@ -48,7 +48,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 12
                 }
             ]
         },
@@ -57,7 +57,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 91
+                    "lightness": 9
                 },
                 {
                     "weight": 1.2
@@ -69,7 +69,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 12
                 }
             ]
         },
@@ -78,7 +78,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 85
+                    "lightness": 15
                 }
             ]
         },
@@ -87,7 +87,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 8
                 }
             ]
         },
@@ -96,7 +96,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 70
+                    "lightness": 30
                 },
                 {
                     "weight": 0.2
@@ -108,7 +108,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 90
+                    "lightness": 10
                 }
             ]
         },
@@ -117,7 +117,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 94
+                    "lightness": 6
                 }
             ]
         },
@@ -126,7 +126,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 89
+                    "lightness": 11
                 }
             ]
         },
@@ -135,7 +135,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 8
                 }
             ]
         }
