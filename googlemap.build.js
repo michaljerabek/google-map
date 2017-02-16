@@ -137,6 +137,9 @@
             this.$el = null;
             this.map = null;
 
+            this._animations = {};
+            this._$animEl = $("<div></div>");
+
             this._idHTMLCounter = 0;
             this._idMarkerCounter = 0;
             this._idInfoCounter = 0;
@@ -164,6 +167,30 @@
                 case "Marker": return !this.markers[++this._idMarkerCounter] ? this._idMarkerCounter : generateId.call(this, type);
                 case "Info"  : return !this.infos[++this._idInfoCounter]     ? this._idInfoCounter   : generateId.call(this, type);
             }
+        },
+
+        initInfoEvents = function (info, marker) {
+
+            var touch = false;
+
+            google.maps.event.addListener(marker, "touchend", function() {
+
+                touch = true;
+
+                info.open(this.map, this);
+            });
+
+            google.maps.event.addListener(marker, "click", function() {
+
+                if (touch) {
+
+                    touch = false;
+
+                    return;
+                }
+
+                info.open(this.map, this);
+            });
         };
 
     GoogleMap.DEFAULTS = DEFAUlTS;
@@ -390,28 +417,9 @@
             infoOptions = $.extend({}, infoOptions, options.options);
         }
 
-        var info = new google.maps.InfoWindow(infoOptions),
+        var info = new google.maps.InfoWindow(infoOptions);
 
-            touch = false;
-
-        google.maps.event.addListener(options.marker, "touchend", function() {
-
-            touch = true;
-
-            info.open(this.map, this);
-        });
-
-        google.maps.event.addListener(options.marker, "click", function() {
-
-            if (touch) {
-
-                touch = false;
-
-                return;
-            }
-
-            info.open(this.map, this);
-        });
+        initInfoEvents.call(this, info, options.marker);
 
         this.infos[id] = info;
 
@@ -550,9 +558,142 @@
     /**
      * Zarovná mapu na střed location.
      */
-    GoogleMap.prototype.centerLocation = function () {
+    GoogleMap.prototype.centerToLocation = function () {
 
         this.map.setCenter(this.map.location);
+    };
+
+    /**
+     * Zarovná mapu na střed zadaného objektu.
+     *
+     * object (String) - id Markeru nabo HTML
+     * object (LatLng, Array) - souřadnice
+     */
+    GoogleMap.prototype.center = function (object) {
+
+        if (typeof object === "string" || typeof object === "number") {
+
+            object = this.getMarker(object) || this.getHTML(object);
+        }
+
+        if (object instanceof Array) {
+
+            object = new google.maps.LatLng(object[0], object[1]);
+        }
+
+        if (object instanceof google.maps.LatLng) {
+
+            this.map.setCenter(object);
+
+        } else if (object && object.position) {
+
+            this.map.setCenter(object.position);
+
+        } else {
+
+            this.centerToLocation();
+        }
+    };
+
+    /**
+     * Aktivuje animaci zadaného Markeru.
+     *
+     * marker (String, Marker) - id Markeru nebo Marker
+     * duration (Number) - délka animace
+     * animation (google.maps.Animation) - typ animace (Výchozí: BOUNCE)
+     */
+    GoogleMap.prototype.animate = function (marker, duration, animation) {
+
+        if (typeof marker === "string" || typeof marker === "number") {
+
+            marker = this.getMarker(marker);
+        }
+
+        if (marker) {
+
+            var animId = marker.getPosition().toString();
+
+            clearTimeout(this._animations[animId]);
+
+            if (marker.getAnimation() !== null) {
+
+                marker.setAnimation(null);
+            }
+
+            marker.setAnimation(animation || google.maps.Animation.BOUNCE);
+
+            this._animations[animId] = setTimeout(marker.setAnimation.bind(marker, null), duration || 2800);
+        }
+    };
+
+    /**
+     * Zvýrazní zadaný marker.
+     *
+     * markerToHightlight (String, Marker) - id Markeru nebo Marker
+     * opacity (Number) - jakou opacity mají mít ostatní markery
+     * duration (Number) - délka animace
+     * easing (String) - easing
+    */
+    GoogleMap.prototype.highlight = function (markerToHightlight, opacity, duration, easing) {
+
+        if (typeof markerToHightlight === "string" || typeof markerToHightlight === "number") {
+
+            markerToHightlight = this.getMarker(markerToHightlight);
+        }
+
+        if (duration) {
+
+            var initOpacity = [];
+
+            this._$animEl.stop().animate({opacity: opacity}, {
+                duration: duration,
+                progress: function (x, pct) {
+
+                    $.each(this.markers, function (m, marker) {
+
+                        if (typeof initOpacity[m] !== "number") {
+
+                            initOpacity[m] = typeof marker.getOpacity() === "number" ? marker.getOpacity() : 1;
+                        }
+
+                        var targetOpacity = marker !== markerToHightlight ? opacity : 1,
+
+                            toAnimate = initOpacity[m] - targetOpacity;
+
+                        if (toAnimate) {
+
+                            marker.setOpacity(initOpacity[m] - (toAnimate * pct));
+                        }
+
+                        if (targetOpacity === 0 && pct === 1) {
+
+                            marker.setVisible(false);
+                        }
+
+                        if (targetOpacity > 0 && !marker.getVisible()) {
+
+                            marker.setVisible(true);
+                        }
+                    });
+
+                }.bind(this),
+                easing: easing || "linear"
+            });
+
+            return;
+        }
+
+        $.each(this.markers, function (m, marker) {
+
+            if (opacity) {
+
+                marker.setOpacity(marker === markerToHightlight ? 1 : opacity);
+
+            } else {
+
+                marker.setVisible(marker === markerToHightlight);
+            }
+        });
     };
 
     /**
