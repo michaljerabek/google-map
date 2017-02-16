@@ -834,7 +834,7 @@
 
             var initOpacity = [];
 
-            this._$animEl.stop(true, true).animate({opacity: opacity}, {
+            this._$animEl.stop(true).animate({opacity: opacity}, {
                 duration: duration,
                 progress: function (x, pct) {
 
@@ -917,7 +917,7 @@
 
             var initOpacity = [];
 
-            this._$animEl.stop().animate({opacity: opacity}, {
+            this._$animEl.stop(true).animate({opacity: opacity}, {
                 duration: duration,
                 progress: function (x, pct) {
 
@@ -1017,6 +1017,33 @@
     GoogleMap.prototype.off = function (listener) {
 
         this.map.removeListener(listener);
+    };
+
+    /**
+     * Přiřadí k Markeru event listener a vrátí jeho instanci.
+     *
+     * marker (String, Marker) - id Markeru nebo Marker
+     * type (String) - typ události (click, ...)
+     * cb (Function) - funkce, která se má spustit při události
+     */
+    GoogleMap.prototype.onMarker = function (marker, type, cb) {
+
+        if (typeof marker === "string" || typeof marker === "number") {
+
+            marker = this.getMarker(marker);
+        }
+
+        return google.maps.event.addListener(marker, type, cb);
+    };
+
+    /*
+     * Odstraní z Markeru event listener.
+     *
+     * listener - instance event listeneru
+     */
+    GoogleMap.prototype.offMarker = function (listener) {
+
+        google.maps.event.removeListener(listener);
     };
 
 }(jQuery));
