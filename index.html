@@ -40,6 +40,7 @@
     <script src="src/GoogleMapStyle.js"></script>
     <script src="src/styles/grayscale-inverse.js"></script>
     <script src="src/styles/grayscale.js"></script>
+    <script src="src/styles/monochrome.js"></script>
 <!--    <script src="googlemap-styles.build.min.js"></script>-->
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
@@ -185,7 +186,15 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("grayscale"),
+            styles: GoogleMap.getStyles("monochrome", function () {
+
+                this.set("all", "all", {
+                    color: "#a36172",
+                    gamma: 0.25
+//                    color: "#06090b"
+                });
+
+            }),
             controls: true
         });
 
