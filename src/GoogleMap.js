@@ -841,7 +841,7 @@
 
         if (duration) {
 
-            var initOpacity = [];
+            var initOpacity = {};
 
             this._$animEl.stop(true).animate({opacity: opacity}, {
                 duration: duration,
