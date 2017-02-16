@@ -651,6 +651,169 @@
     };
 
     /**
+     * Nastaví zadanému Markeru opacity.
+     *
+     * marker (String, Marker) - id Markeru nebo Marker
+     * opacity (Number) - opacity
+     * duration (Number) - délka animace
+     * easing (String) - easing
+     */
+    GoogleMap.prototype.opacity = function (marker, opacity, duration, easing) {
+
+        if (typeof marker === "string" || typeof marker === "number") {
+
+            marker = this.getMarker(marker);
+        }
+
+        if (marker && duration) {
+
+            var initOpacity;
+
+            this._$animEl.stop(true, true).animate({opacity: opacity}, {
+                duration: duration,
+                progress: function (x, pct) {
+
+                    if (typeof initOpacity !== "number") {
+
+                        initOpacity = typeof marker.getOpacity() === "number" ? marker.getOpacity() : marker.getVisible() ? 1 : 0;
+                    }
+
+                    var toAnimate = initOpacity - opacity;
+
+                    if (toAnimate) {
+
+                        marker.setOpacity(initOpacity - (toAnimate * pct));
+                    }
+
+                    if (!marker.getVisible() && opacity > 0) {
+
+                        marker.setVisible(true);
+                    }
+
+                    if (opacity === 0 && pct === 1) {
+
+                        marker.setVisible(false);
+                    }
+                },
+                easing: easing || "linear"
+            });
+
+            return;
+        }
+
+        marker.setOpacity(opacity);
+
+        marker.setVisible(opacity > 0);
+    };
+
+    /**
+     * Nastaví opacity skupině Markerů.
+     *
+     * group (String) - název skupiny
+     * opacity (Number) - opacity
+     * duration (Number) - délka animace
+     * easing (String) - easing
+     */
+    GoogleMap.prototype.groupOpacity = function (group, opacity, duration, easing) {
+
+        if (duration) {
+
+            var initOpacity = [];
+
+            this._$animEl.stop(true, true).animate({opacity: opacity}, {
+                duration: duration,
+                progress: function (x, pct) {
+
+                    $.each(this.groupedMarkers[group], function (m, marker) {
+
+
+                        if (typeof initOpacity[m] !== "number") {
+
+                            initOpacity[m] = typeof marker.getOpacity() === "number" ? marker.getOpacity() : marker.getVisible() ? 1 : 0;
+                        }
+
+                        var toAnimate = initOpacity[m] - opacity;
+
+                        if (toAnimate) {
+
+                            marker.setOpacity(initOpacity[m] - (toAnimate * pct));
+                        }
+
+                        if (!marker.getVisible() && opacity > 0) {
+
+                            marker.setVisible(true);
+                        }
+
+                        if (opacity === 0 && pct === 1) {
+
+                            marker.setVisible(false);
+                        }
+
+                    }.bind(this));
+                }.bind(this),
+                easing: easing || "linear"
+            });
+
+            return;
+        }
+
+        $.each(this.groupedMarkers[group], function (m, marker) {
+
+            marker.setOpacity(opacity);
+
+            marker.setVisible(opacity > 0);
+
+        }.bind(this));
+    };
+
+    /**
+     * Zobrazí zadaný Marker.
+     *
+     * marker (String, Marker) - id Markeru nebo Marker
+     * duration (Number) - délka animace
+     * easing (String) - easing
+     */
+    GoogleMap.prototype.show = function (marker, duration, easing) {
+
+        this.opacity(marker, 1, duration, easing);
+    };
+
+    /**
+     * Zobrazí skupinu Markerů.
+     *
+     * group (String) - název skupiny
+     * duration (Number) - délka animace
+     * easing (String) - easing
+     */
+    GoogleMap.prototype.showGroup = function (group, duration, easing) {
+
+
+        this.groupOpacity(group, 1, duration, easing);
+    };
+
+    /**
+     * Skryje zadaný Marker.
+     *
+     * marker (String, Marker) - id Markeru nebo Marker
+     * duration (Number) - délka animace
+     */
+    GoogleMap.prototype.hide = function (marker, duration, easing) {
+
+        this.opacity(marker, 0, duration, easing);
+    };
+
+    /**
+     * Srkyje skupinu Markerů.
+     *
+     * group (String) - název skupiny
+     * duration (Number) - délka animace
+     */
+    GoogleMap.prototype.hideGroup = function (group, duration, easing) {
+
+        this.groupOpacity(group, 0, duration, easing);
+    };
+
+    /**
      * Zvýrazní zadaný marker.
      *
      * markerToHightlight (String, Marker, Boolean) - id Markeru nebo Marker; pokud je false, zvýraznění se zruší
@@ -658,7 +821,9 @@
      * duration (Number) - délka animace
      * easing (String) - easing
     */
-    GoogleMap.prototype.highlight = function (markerToHightlight, opacity, duration, easing) {
+    GoogleMap.prototype.highlight = function (markerToHightlight, duration, opacity, easing) {
+
+        opacity = opacity || 0;
 
         if (typeof markerToHightlight === "string" || typeof markerToHightlight === "number") {
 
@@ -669,7 +834,7 @@
 
             var initOpacity = [];
 
-            this._$animEl.stop().animate({opacity: opacity}, {
+            this._$animEl.stop(true, true).animate({opacity: opacity}, {
                 duration: duration,
                 progress: function (x, pct) {
 
@@ -744,7 +909,9 @@
      * duration (Number) - délka animace
      * easing (String) - easing
     */
-    GoogleMap.prototype.highlightGroup = function (groupToHighlight, opacity, duration, easing) {
+    GoogleMap.prototype.highlightGroup = function (groupToHighlight, duration, opacity, easing) {
+
+        opacity = opacity || 0;
 
         if (duration) {
 
