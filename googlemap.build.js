@@ -84,7 +84,7 @@
      *     el: "#map" | $() | HTMLElement, - element, do kterého se vloží mapa
      *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
      *     icon: "marker.png", - obrázek pro vlastní pin
-     *     markers: [{icon: "marker.png", coords: [], info: "", options: {}, id: "" | 0}], - více vlastních pinů
+     *     markers: [{icon: "marker.png", coords: [], info: "", options: {}, id: "" | 0, group: ""}], - více vlastních pinů
      *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
      *     html: "" | HTMLElement | {html: "" | HTMLElement, coords: [] | Marker | LatLng, draw: function} | [...] - html obsah na mapě
      *     zoom: 14, - přiblížení mapy
@@ -149,6 +149,7 @@
             this._htmls = [];
 
             this.markers = {};
+            this.groupedMarkers = {};
             this.infos = {};
             this.HTMLs = {};
 
@@ -318,7 +319,8 @@
      *     options: {}, - ostatní nastavení markeru
      *     info: "" - informace zobrazované u markeru
      *     id: id Markeru, podle kterého je možné najít příslušný objekt
-     *     infoId: id Infa, podle kterého je možné najít příslušný objekt
+     *     infoId: id Infa, podle kterého je možné najít příslušný objekt,
+     *     group: "" - skupina markerů
      * }
      * returnInstance (Boolean) - vrátit místo id instanci
      */
@@ -365,6 +367,12 @@
         }
 
         this.markers[id] = marker;
+
+        options.group = options.group || "no-group";
+
+        this.groupedMarkers[options.group] = this.groupedMarkers[options.group] || {};
+
+        this.groupedMarkers[options.group][id] = marker;
 
         return returnInstance ? marker : id;
     };
@@ -627,6 +635,22 @@
     };
 
     /**
+     * Aktivuje animaci skupiny Markerů.
+     *
+     * group (String) - název skupiny
+     * duration (Number) - délka animace
+     * animation (google.maps.Animation) - typ animace (Výchozí: BOUNCE)
+     */
+    GoogleMap.prototype.animateGroup = function (group, duration, animation) {
+
+        $.each(this.groupedMarkers[group], function (i, marker) {
+
+            this.animate(marker, duration, animation);
+
+        }.bind(this));
+    };
+
+    /**
      * Zvýrazní zadaný marker.
      *
      * markerToHightlight (String, Marker, Boolean) - id Markeru nebo Marker; pokud je false, zvýraznění se zruší
@@ -689,11 +713,122 @@
 
                 marker.setOpacity(marker === markerToHightlight || markerToHightlight === false ? 1 : opacity);
 
+                if (marker === markerToHightlight || markerToHightlight === false || opacity > 0) {
+
+                    marker.setVisible(true);
+                }
+
+
+                if (marker !== markerToHightlight && markerToHightlight === false && opacity === 0) {
+
+                    marker.setVisible(false);
+                }
+
             } else {
+
+                if (marker === markerToHightlight || markerToHightlight === false) {
+
+                    marker.setOpacity(1);
+                }
 
                 marker.setVisible(marker === markerToHightlight || markerToHightlight === false);
             }
         });
+    };
+
+    /**
+     * Zvýrazní skupinu Markerů.
+     *
+     * groupToHighlight (String, Boolean) - název skupiny; pokud je false, zvýraznění se odstraní
+     * opacity (Number) - jakou opacity mají mít ostatní markery
+     * duration (Number) - délka animace
+     * easing (String) - easing
+    */
+    GoogleMap.prototype.highlightGroup = function (groupToHighlight, opacity, duration, easing) {
+
+        if (duration) {
+
+            var initOpacity = [];
+
+            this._$animEl.stop().animate({opacity: opacity}, {
+                duration: duration,
+                progress: function (x, pct) {
+
+                    $.each(this.groupedMarkers, function (group) {
+
+                        if (typeof initOpacity[group] !== "object") {
+
+                            initOpacity[group] = [];
+                        }
+
+                        $.each(this.groupedMarkers[group], function (m, marker) {
+
+                            if (typeof initOpacity[group][m] !== "number") {
+
+                                initOpacity[group][m] = typeof marker.getOpacity() === "number" ? marker.getOpacity() : marker.getVisible() ? 1 : 0;
+                            }
+
+                            var targetOpacity = group !== groupToHighlight && groupToHighlight !== false ? opacity : 1,
+
+                                toAnimate = initOpacity[group][m] - targetOpacity;
+
+                            if (toAnimate) {
+
+                                marker.setOpacity(initOpacity[group][m] - (toAnimate * pct));
+                            }
+
+                            if (targetOpacity === 0 && pct === 1) {
+
+                                marker.setVisible(false);
+                            }
+
+                            if (targetOpacity > 0 && !marker.getVisible()) {
+
+                                marker.setVisible(true);
+                            }
+
+                        }.bind(this));
+
+                    }.bind(this));
+
+                }.bind(this),
+                easing: easing || "linear"
+            });
+
+            return;
+        }
+
+        $.each(this.groupedMarkers, function (group) {
+
+            $.each(this.groupedMarkers[group], function (m, marker) {
+
+                if (opacity) {
+
+                    marker.setOpacity(group === groupToHighlight || groupToHighlight === false ? 1 : opacity);
+
+                    if (group === groupToHighlight || groupToHighlight === false || opacity > 0) {
+
+                        marker.setVisible(true);
+                    }
+
+
+                    if (group !== groupToHighlight && groupToHighlight === false && opacity === 0) {
+
+                        marker.setVisible(false);
+                    }
+
+                } else {
+
+                    if (group === groupToHighlight || groupToHighlight === false) {
+
+                        marker.setOpacity(1);
+                    }
+
+                    marker.setVisible(group === groupToHighlight || groupToHighlight === false);
+                }
+
+            }.bind(this));
+        }.bind(this));
     };
 
     /**
