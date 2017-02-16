@@ -68,7 +68,7 @@
         /*Základní mapa s upraveným stylem.*/
         var map2 = new GoogleMap({
             el: "#map2",
-            icon: "marker2.png",
+//            icon: "marker2.png",
             coords: [40.700565, -74.1180853],
             zoom: 13,
             styles: GoogleMap.getStyles("grayscale", function () {
@@ -78,23 +78,32 @@
                     gamma: 0.3,
                     lightness: 30
                 });
-            }),
+            })
+        });
+
+        map2.addMarker({
+            icon: "marker2.png",
+            coords: [40.700565, -74.1180853],
+            group: "A",
             info: "Ahoj, tady je New York!"
         });
 
         map2.addMarker({
             icon: "marker3.png",
             coords: [40.700565, -74.1380853],
+            group: "A"
         });
 
         map2.addMarker({
             icon: "marker4.png",
             coords: [40.709965, -74.1180853],
+            group: "B"
         });
 
         map2.addMarker({
             icon: "marker.png",
             coords: [40.709965, -74.1380853],
+            group: "B"
         });
 
 
