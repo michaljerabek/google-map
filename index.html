@@ -69,7 +69,8 @@
         var map2 = new GoogleMap({
             el: "#map2",
             icon: "marker2.png",
-            coords: [40.705565, -74.1180853],
+            coords: [40.700565, -74.1180853],
+            zoom: 13,
             styles: GoogleMap.getStyles("grayscale", function () {
 
                 /*Úprava kontrastu všech prvků.*/
@@ -83,7 +84,17 @@
 
         map2.addMarker({
             icon: "marker3.png",
-            coords: [40.705565, -74.1380853],
+            coords: [40.700565, -74.1380853],
+        });
+
+        map2.addMarker({
+            icon: "marker4.png",
+            coords: [40.709965, -74.1180853],
+        });
+
+        map2.addMarker({
+            icon: "marker.png",
+            coords: [40.709965, -74.1380853],
         });
 
 
@@ -179,7 +190,7 @@
 
         //asi je dobrý tam vždycky nastavit fixní rozměry (width/height)
         var html6 = [
-            "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px; position: relative;'>",
+            "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
                 "<h3 style='color: crimson'>Tady je New York!</h3>",
                 "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
                 "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
@@ -207,7 +218,7 @@
                 {
                     coords: [40.705565, -74.0880853],
                     html: [
-                        "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px; position: relative;'>",
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
                             "<h3 style='color: crimson'>Tady je New York!</h3>",
                             "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
                             "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
@@ -217,7 +228,7 @@
                 {
                     coords: [40.705565, -74.1480853],
                     html: [
-                        "<div style='background: #222; text-align: center; padding: 5px 15px; margin-top: -10px; position: relative;'>",
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
                             "<h3 style='color: deepskyblue'>Tady je New York!</h3>",
                             "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
                             "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
