@@ -1558,6 +1558,33 @@
     };
 
     /**
+     * Spustí funkci pro každý styl.
+     *
+     * fnOrDeep (Function, Boolean) - v případě true, zavolá funkci pro každý styl
+     * fn (Function)
+     */
+    GoogleMapStyle.prototype.each = function (fnOrDeep, fn) {
+
+        if (fnOrDeep === true) {
+
+            this.getStyles().forEach(function (style) {
+
+                if (style.stylers) {
+
+                    style.stylers.forEach(function (styler) {
+
+                        fn.call(this, styler, style.featureType, style.elementType);
+                    });
+                }
+            });
+
+            return;
+        }
+
+        this.getStyles().forEach(fnOrDeep.bind(this));
+    };
+
+    /**
      * Vratí pole se styly.
      */
     GoogleMapStyle.prototype.getStyles = function () {
