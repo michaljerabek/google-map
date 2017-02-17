@@ -9,7 +9,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "all",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#7f7f7f"
                 }
             ]
         },
@@ -18,7 +18,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "labels.text.fill",
             "stylers": [
                 {
-                    "lightness": 50
+                    "lightness": 0
                 }
             ]
         },
@@ -30,7 +30,7 @@ GoogleMap.STYLES.monochrome = function () {
                     "visibility": "on"
                 },
                 {
-                    "lightness": 92
+                    "lightness": 90
                 }
             ]
         },
@@ -48,7 +48,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 70
                 }
             ]
         },
@@ -57,7 +57,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 91
+                    "lightness": 85
                 },
                 {
                     "weight": 1.2
@@ -69,7 +69,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 80
                 }
             ]
         },
@@ -78,7 +78,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 85
+                    "lightness": 70
                 }
             ]
         },
@@ -87,7 +87,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 60
                 }
             ]
         },
@@ -96,10 +96,10 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 70
+                    "lightness": 95
                 },
                 {
-                    "weight": 0.2
+                    "weight": 0.75
                 }
             ]
         },
@@ -108,7 +108,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 90
+                    "lightness": 93
                 }
             ]
         },
@@ -117,7 +117,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 94
+                    "lightness": 93
                 }
             ]
         },
@@ -126,7 +126,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 89
+                    "lightness": 93
                 }
             ]
         },
@@ -135,7 +135,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 90
                 }
             ]
         }
