@@ -1598,7 +1598,7 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMap*/
 
-GoogleMap.STYLES["grayscale-inverse"] = function () {
+GoogleMap.STYLES.dark = function () {
 
     return [
         {
@@ -1791,7 +1791,7 @@ GoogleMap.STYLES["grayscale-inverse"] = function () {
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMap*/
 
-GoogleMap.STYLES.grayscale = function () {
+GoogleMap.STYLES.desaturate = function () {
 
     return [
         {
@@ -1808,7 +1808,7 @@ GoogleMap.STYLES.grayscale = function () {
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMap*/
 
-GoogleMap.STYLES["monochrome-inverse"] = function () {
+GoogleMap.STYLES["monochrome-dark"] = function () {
 
     return [
         {
@@ -1816,7 +1816,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "all",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#7f7f7f"
                 }
             ]
         },
@@ -1825,7 +1825,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "labels.text.fill",
             "stylers": [
                 {
-                    "lightness": 50
+                    "lightness": 0
                 }
             ]
         },
@@ -1837,7 +1837,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
                     "visibility": "on"
                 },
                 {
-                    "lightness": 8
+                    "lightness": -90
                 }
             ]
         },
@@ -1855,7 +1855,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 12
+                    "lightness": -76
                 }
             ]
         },
@@ -1864,7 +1864,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 9
+                    "lightness": -82
                 },
                 {
                     "weight": 1.2
@@ -1876,7 +1876,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 12
+                    "lightness": -80
                 }
             ]
         },
@@ -1885,7 +1885,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 15
+                    "lightness": -72
                 }
             ]
         },
@@ -1894,7 +1894,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 8
+                    "lightness": -80
                 }
             ]
         },
@@ -1903,10 +1903,10 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 30
+                    "lightness": -60
                 },
                 {
-                    "weight": 0.2
+                    "weight": 0.75
                 }
             ]
         },
@@ -1915,7 +1915,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 10
+                    "lightness": -92
                 }
             ]
         },
@@ -1924,7 +1924,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 6
+                    "lightness": -92
                 }
             ]
         },
@@ -1933,7 +1933,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 11
+                    "lightness": -92
                 }
             ]
         },
@@ -1942,7 +1942,7 @@ GoogleMap.STYLES["monochrome-inverse"] = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 8
+                    "lightness": -88
                 }
             ]
         }
@@ -1960,7 +1960,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "all",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#7f7f7f"
                 }
             ]
         },
@@ -1969,7 +1969,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "labels.text.fill",
             "stylers": [
                 {
-                    "lightness": 50
+                    "lightness": 0
                 }
             ]
         },
@@ -1981,7 +1981,7 @@ GoogleMap.STYLES.monochrome = function () {
                     "visibility": "on"
                 },
                 {
-                    "lightness": 92
+                    "lightness": 90
                 }
             ]
         },
@@ -1999,7 +1999,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 70
                 }
             ]
         },
@@ -2008,7 +2008,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 91
+                    "lightness": 85
                 },
                 {
                     "weight": 1.2
@@ -2020,7 +2020,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 88
+                    "lightness": 80
                 }
             ]
         },
@@ -2029,7 +2029,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 85
+                    "lightness": 70
                 }
             ]
         },
@@ -2038,7 +2038,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 60
                 }
             ]
         },
@@ -2047,10 +2047,10 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "lightness": 70
+                    "lightness": 95
                 },
                 {
-                    "weight": 0.2
+                    "weight": 0.75
                 }
             ]
         },
@@ -2059,7 +2059,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 90
+                    "lightness": 93
                 }
             ]
         },
@@ -2068,7 +2068,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 94
+                    "lightness": 93
                 }
             ]
         },
@@ -2077,7 +2077,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 89
+                    "lightness": 93
                 }
             ]
         },
@@ -2086,7 +2086,7 @@ GoogleMap.STYLES.monochrome = function () {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "lightness": 92
+                    "lightness": 90
                 }
             ]
         }

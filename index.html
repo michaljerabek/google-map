@@ -38,10 +38,10 @@
     <script src="src/GoogleMap.js"></script>
     <script src="src/GoogleMapHTMLOverlay.js"></script>
     <script src="src/GoogleMapStyle.js"></script>
-    <script src="src/styles/grayscale-inverse.js"></script>
-    <script src="src/styles/grayscale.js"></script>
+    <script src="src/styles/dark.js"></script>
+    <script src="src/styles/desaturate.js"></script>
     <script src="src/styles/monochrome.js"></script>
-    <script src="src/styles/monochrome-inverse.js"></script>
+    <script src="src/styles/monochrome-dark.js"></script>
 <!--    <script src="googlemap-styles.build.min.js"></script>-->
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
@@ -57,7 +57,7 @@
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("grayscale"),
+            styles: GoogleMap.getStyles("desaturate"),
             onInit: function () {
 
                 map.addInfo({
@@ -73,12 +73,12 @@
 //            icon: "marker2.png",
             coords: [40.700565, -74.1180853],
             zoom: 13,
-            styles: GoogleMap.getStyles("grayscale", function () {
+            styles: GoogleMap.getStyles("desaturate", function () {
 
                 /*Úprava kontrastu všech prvků.*/
                 this.set("all", "all", {
                     gamma: 0.3,
-                    lightness: 30
+                    lightness: 40
                 });
             })
         });
@@ -114,7 +114,7 @@
             el: "#map3",
             icon: "marker3.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("grayscale-inverse")
+            styles: GoogleMap.getStyles("dark")
         });
 
         /*Pridání markeru i s infem.*/
@@ -140,7 +140,7 @@
             icon: "marker4.png",
             coords: [40.705565, -74.1180853],
 
-            styles: GoogleMap.getStyles("grayscale-inverse", function () {
+            styles: GoogleMap.getStyles("dark", function () {
 
                 /*Snížit všemu gammu.*/
                 this.set("all", "all", {
@@ -187,12 +187,11 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("monochrome-inverse", function () {
+            styles: GoogleMap.getStyles("monochrome-dark", function () {
 
                 this.set("all", "all", {
-                    color: "#a36172",
-                    gamma: 0.25
-//                    color: "#06090b"
+                    color: "#a55263"
+//                    color: "#58819b"
                 });
 
             }),
@@ -207,8 +206,7 @@
             styles: GoogleMap.getStyles("monochrome", function () {
 
                 this.set("all", "all", {
-                    color: "#416b88",
-                    gamma: 0.3
+                    color: "#5694c3"
                 });
 
             }),
@@ -238,7 +236,7 @@
         var map7 = new GoogleMap({
             el: "#map7",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("grayscale"),
+            styles: GoogleMap.getStyles("desaturate"),
 
             html: [
                 {
