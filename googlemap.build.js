@@ -92,7 +92,7 @@
      *     info: "", - informace zobrazující se u výchozího markeru
      *     options: {}, - nastavení přidávající k mapě další nastavení
      *     controls: false, - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
-     *     centerLocationOnResize: 100 | true - vycentrovat mapu na coords při změně velikosti okna | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
+     *     centerToLocationOnResize: 100 | true - vycentrovat mapu na coords při změně velikosti okna | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
      * }
      * */
     var DEFAUlTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
@@ -101,7 +101,7 @@
             zoom: 14,
             controls: false,
             styles: [],
-            centerLocationOnResize: 100
+            centerToLocationOnResize: 100
         },
 
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
@@ -267,9 +267,9 @@
 
         this.map = new google.maps.Map(this.el, mapOptions);
 
-        if (this.options.centerLocationOnResize) {
+        if (this.options.centerToLocationOnResize) {
 
-            this.initCenterLocationOnResize(this.options.centerLocationOnResize);
+            this.initCenterToLocationOnResize(this.options.centerToLocationOnResize);
         }
 
         this.initialized = true;
@@ -550,7 +550,7 @@
      *
      * ms (Number) - debouncing
      */
-    GoogleMap.prototype.initCenterLocationOnResize = function (ms) {
+    GoogleMap.prototype.initCenterToLocationOnResize = function (ms) {
 
         if (this.resizeInitialized) {
 
@@ -567,12 +567,12 @@
 
                 clearTimeout(debounce);
 
-                debounce = setTimeout(_this.centerLocation.bind(_this), ms);
+                debounce = setTimeout(_this.centerToLocation.bind(_this), ms);
 
                 return;
             }
 
-            _this.centerLocation();
+            _this.centerToLocation();
         });
 
         this.resizeInitialized = true;
