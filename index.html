@@ -121,6 +121,13 @@
             group: "B"
         });
 
+        map2.promise().then(function (instance) {
+
+            setTimeout(function() {
+
+                instance.highlightGroup("B", 300, 0.5);
+            }, 2000);
+        });
 
         /*Mapa s inverzním černobílým stylem.*/
         var map3 = new GoogleMap({
