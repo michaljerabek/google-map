@@ -55,7 +55,7 @@
 
                 if (typeof window.GoogleMaps.onInit === "function") {
 
-                    window.GoogleMaps.onInit();
+                    window.GoogleMaps.onInit(maps);
                 }
 
                 defer.resolve(maps);
