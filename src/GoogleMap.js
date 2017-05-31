@@ -71,8 +71,11 @@
             this._idInfoCounter = 0;
 
             this._markers = [];
+            this._markersDefers = {};
             this._infos = [];
+            this._infosDefers = {};
             this._htmls = [];
+            this._htmlsDefers = {};
 
             this.markers = {};
             this.groupedMarkers = {};
@@ -82,6 +85,8 @@
             this.markerId = null;
             this.infoId = null;
             this.HTMLId = null;
+
+            this._defer = $.Deferred();
 
             GoogleMaps.addMap(this);
         },
@@ -248,10 +253,17 @@
 
             this.options.onInit.call(this);
         }
+
+        this._defer.resolve(this, this.markers[this.markerId], this.markerId);
+    };
+
+    GoogleMap.prototype.promise = function () {
+
+        return this._defer.promise();
     };
 
     /**
-     * Přidá k mapě marker. Pokud je mapa inicializovaná vrátí instanci Markeru.
+     * Přidá k mapě marker. Vrátí Promise.
      * Všechny markery jsou v instance.markers.
      *
      * options - {
@@ -263,21 +275,23 @@
      *     infoId: id Infa, podle kterého je možné najít příslušný objekt,
      *     group: "" - skupina markerů
      * }
-     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addMarker = function (options, returnInstance) {
+    GoogleMap.prototype.addMarker = function (options) {
 
         options = options || {};
 
-        var id = options.id || generateId.call(this, "Marker");
+        var id = options.id || generateId.call(this, "Marker"),
+
+            defer = this._markersDefers[options.id] || $.Deferred();
 
         if (!this.initialized) {
 
             options.id = options.id || id;
 
             this._markers.push(options);
+            this._markersDefers[options.id] = defer;
 
-            return returnInstance ? null : id;
+            return defer.promise();
         }
 
         if (options.coords && !(options.coords instanceof google.maps.LatLng)) {
@@ -315,7 +329,9 @@
 
         this.groupedMarkers[options.group][id] = marker;
 
-        return returnInstance ? marker : id;
+        defer.resolve(this, marker, id);
+
+        return defer.promise();
     };
 
     /**
@@ -329,7 +345,7 @@
     };
 
     /**
-     * Přidá informace k markeru. Pokud je mapa inicializovaná vrátí instanci InfoWindow.
+     * Přidá informace k markeru. Vrátí Promise.
      * Info se zobrazuje při kliknutí (a touchend) na pin. Všechny info jsou v instance.infos.
      *
      * options - {
@@ -338,21 +354,23 @@
      *     marker: Marker - marker, ke kterému se má info přiřadit (pokud není nastaveno použije se poslední)
      *     id: id Infa, podle kterého je možné najít příslušný objekt
      * }
-     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addInfo = function (options, returnInstance) {
+    GoogleMap.prototype.addInfo = function (options) {
 
         options = options || {};
 
-        var id = options.id || generateId.call(this, "Info");
+        var id = options.id || generateId.call(this, "Info"),
+
+            defer = this._infosDefers[options.id] || $.Deferred();
 
         if (!this.initialized) {
 
             options.id = options.id || id;
 
             this._infos.push(options);
+            this._infosDefers[options.id] = defer;
 
-            return returnInstance ? null : id;
+            return defer.promise();
         }
 
         options.marker = options.marker || this.markers[this.markers.length - 1];
@@ -372,7 +390,9 @@
 
         this.infos[id] = info;
 
-        return returnInstance ? info : id;
+        defer.resolve(this, info, id);
+
+        return defer.promise();
     };
 
     /**
@@ -386,7 +406,7 @@
     };
 
     /**
-     * Přidá do mapy vlastní HTML obsah. Pokud je mapa inicializovaná vrátí instanci GoogleMapHTMLOverlay.
+     * Přidá do mapy vlastní HTML obsah. Vrátí Promise.
      * Všechny HTML jsou v instance.HTMLs.
      *
      * options - "<div></div>" | {
@@ -395,13 +415,14 @@
      *     draw: function, - vlastní funkce zajišťující vykreslení HTML
      *     id: id HTML, podle kterého je možné najít příslušný objekt
      * }
-     * returnInstance (Boolean) - vrátit místo id instanci
      */
-    GoogleMap.prototype.addHTML = function (options, returnInstance) {
+    GoogleMap.prototype.addHTML = function (options) {
 
         options = options || {};
 
-        var id = options.id || generateId.call(this, "HTML");
+        var id = options.id || generateId.call(this, "HTML"),
+
+            defer = this._htmlsDefers[options.id] || $.Deferred();
 
         if (!this.initialized) {
 
@@ -418,8 +439,9 @@
             }
 
             this._htmls.push(options);
+            this._htmlsDefers[options.id] = defer;
 
-            return returnInstance ? null : id;
+            return defer.promise();
         }
 
         var html = typeof options === "string" || options instanceof HTMLElement ? options : options.html,
@@ -430,7 +452,9 @@
 
         this.HTMLs[id] = overlay;
 
-        return returnInstance ? overlay : id;
+        defer.resolve(this, overlay, id);
+
+        return defer.promise();
     };
 
     /**

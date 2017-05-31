@@ -28,7 +28,7 @@
     <div id="map6" class="map"></div>
     <div id="map7" class="map"></div>
 
-    <script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
 
     <!-- ---------------------------------------------------------------------------------------------------- !! callback=googleMapsInit !! -->
     <script defer async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_hHC_U83qwSgTWlK4rEC5xfNInW-KOAI&callback=googleMapsInit"></script>
@@ -51,20 +51,32 @@
             console.log("GoogleMaps initialized!");
         };
 
+        GoogleMaps.promise().then(function (maps) {
+
+            console.log(maps.length);
+        });
 
         /*Základní mapa. Info se přidává až po inicializaci.*/
         var map = new GoogleMap({
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("desaturate"),
+            styles: GoogleMap.getStyles("desaturate")/*,
             onInit: function () {
 
                 map.addInfo({
                     content: "Nazdárek!",
                     marker: this.markers[this.markerId] //id markeru zadaného při inicializaci; id infa nebude v this.infoId, protože bylo přidáno až po inicializaci
                 });
-            }
+            }*/
+        });
+
+        map.promise().then(function (instance, marker, markerId) {
+
+            map.addInfo({
+                content: "Nazdárek!",
+                marker: marker
+            });
         });
 
         /*Základní mapa s upraveným stylem.*/
@@ -119,7 +131,7 @@
         });
 
         /*Pridání markeru i s infem.*/
-        map3.addMarker({
+        var map3MarkerPromise = map3.addMarker({
             id: "ID",
             icon: "marker.png",
             coords: [40.705565, -74.1380853],
@@ -127,13 +139,10 @@
             infoId: "ID"
         });
 
-        setTimeout(function() {
+        map3MarkerPromise.then(function (instance, marker) {
 
-            if (map3.initialized) {
-
-                console.log(map3.getInfo("ID"), map3.getMarker("ID"));
-            }
-        }, 2000);
+            console.log(instance.getInfo("ID"), marker);
+        });
 
         /*Mapa s upraveným stylem. Přidává se marker až po inicilizaci a info k němu až po jeho vytvoření.*/
         var map4 = new GoogleMap({
@@ -161,14 +170,17 @@
 
             onInit: function () {
 
-                var marker = this.addMarker({
+                var markerPromise = this.addMarker({
                     icon: "marker2.png",
                     coords: [40.705565, -74.1380853]
-                }, true); //vrátí instanci místo id
+                });
 
-                this.addInfo({
-                    content: "Dobrý den!",
-                    marker: marker
+                markerPromise.then(function (instance, marker) {
+
+                    instance.addInfo({
+                        content: "Dobrý den!",
+                        marker: marker
+                    });
                 });
             }
         });
@@ -225,13 +237,10 @@
         /*Proměná html bude id HTML.*/
         var html = map6.addHTML(html6);
 
-        setTimeout(function() {
+        html.then(function (instance, html) {
 
-            if (map6.initialized) {
-
-                console.log(map6.getHTML(html));
-            }
-        }, 2000);
+            console.log(html);
+        });
 
         /*Mapa s několika HTML boxy.*/
         var map7 = new GoogleMap({

@@ -9,65 +9,70 @@
      */
     var GoogleMaps = window.GoogleMaps = (function GoogleMaps() {
 
-        var maps = [],
+            var maps = [],
 
-            initialized = false,
+                initialized = false,
 
-            /*
-             * Přidá novou GoogleMap a inicializuje ji, pokud již byly Google Maps inicializovány.
-             *
-             * map - instance GoogleMap.
-             * */
-            addMap = function (map) {
+                defer = $.Deferred(),
 
-                if (!(map instanceof GoogleMap)) {
+                /*
+                 * Přidá novou GoogleMap a inicializuje ji, pokud již byly Google Maps inicializovány.
+                 *
+                 * map - instance GoogleMap.
+                 * */
+                addMap = function (map) {
 
-                    return false;
+                    if (!(map instanceof GoogleMap)) {
+
+                        return false;
+                    }
+
+                    maps.push(map);
+
+                    if (initialized) {
+
+                        map.init();
+                    }
+
+                    return map;
+                },
+
+                /**
+                 * Inicializuje připravené GoogleMapy.
+                 */
+                init = function () {
+
+                    maps.forEach(function (map) {
+
+                        map.init();
+                    });
+
+                    initialized = true;
+                };
+
+            /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
+            window.googleMapsInit = function googleMapsInit() {
+
+                if (typeof window.GoogleMaps.onInit === "function") {
+
+                    window.GoogleMaps.onInit();
                 }
 
-                maps.push(map);
+                defer.resolve(maps);
 
-                if (initialized) {
-
-                    map.init();
-                }
-
-                return map;
-            },
-
-            /**
-             * Inicializuje připravené GoogleMapy.
-             */
-            init = function () {
-
-                maps.forEach(function (map) {
-
-                    map.init();
-                });
-
-                initialized = true;
+                google.maps.event.addDomListener(window, "load", init);
             };
 
-        /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
-        window.googleMapsInit = function googleMapsInit() {
+            return {
+                //window.GoogleMaps.onInit
+                addMap: addMap,
 
-            window.GoogleMaps.$EVENT.trigger("googleMapInit.GoogleMap");
+                promise: function () {
 
-            if (typeof window.GoogleMaps.onInit === "function") {
+                    return defer.promise();
+                }
+            };
 
-                window.GoogleMaps.onInit();
-            }
-
-            google.maps.event.addDomListener(window, "load", init);
-        };
-
-        return {
-            //window.GoogleMaps.onInit
-            addMap: addMap
-        };
-
-    }());
-
-    GoogleMaps.$EVENT = $({});
+        }());
 
 }(jQuery));
