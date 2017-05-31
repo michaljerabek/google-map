@@ -1594,16 +1594,6 @@
     /**
      * Spustí funkci pro každý styl.
      *
-     * fn (Function)
-     */
-    GoogleMapStyle.prototype.each = function (fn) {
-
-        this.getStyles().forEach(fn.bind(this));
-    };
-
-    /**
-     * Spustí funkci pro každý styl.
-     *
      * fnOrDeep (Function, Boolean) - v případě true, zavolá funkci pro každý styl
      * fn (Function)
      */
