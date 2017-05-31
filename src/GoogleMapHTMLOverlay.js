@@ -46,7 +46,7 @@
     };
 
     /*Prototype GoogleMapHTMLOverlay je potřeba nastavit až po inicializaci, protože potřebujeme globální objekt google.*/
-    GoogleMaps.$EVENT.on("googleMapInit.GoogleMap", function () {
+    GoogleMaps.promise().then(function () {
 
         GoogleMapHTMLOverlay.prototype = new google.maps.OverlayView();
 
