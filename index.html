@@ -46,7 +46,7 @@
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
 
-        /*funkce se zavolá po kontaktování serveru Googlu*/
+        /*funkce se zavolá po spuštění googleMapsInit*/
         GoogleMaps.onInit = function () {
             console.log("GoogleMaps initialized!");
         };
@@ -77,6 +77,12 @@
                 content: "Nazdárek!",
                 marker: marker
             });
+
+            setTimeout(function() {
+
+                map.animate(marker, 700 * 3);
+
+            }, 500);
         });
 
         /*Základní mapa s upraveným stylem.*/
@@ -125,8 +131,9 @@
 
             setTimeout(function() {
 
-                instance.highlightGroup("B", 300, 0.5);
-            }, 2000);
+                instance.highlightGroup("B", 250, 0.5);
+
+            }, 3000);
         });
 
         /*Mapa s inverzním černobílým stylem.*/
@@ -241,7 +248,7 @@
             "</div>"
         ].join();
 
-        /*Proměná html bude id HTML.*/
+        /*Proměná html bude Promise.*/
         var html = map6.addHTML(html6);
 
         html.then(function (instance, html) {
@@ -269,7 +276,7 @@
                 {
                     coords: [40.705565, -74.1480853],
                     html: [
-                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative; text-indent: 0;'>",
                             "<h3 style='color: deepskyblue'>Tady je New York!</h3>",
                             "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
                             "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
@@ -282,7 +289,8 @@
                         /*Původní funkce draw.*/
                         GoogleMapHTMLOverlay.prototype.draw.apply(this, arguments);
 
-                        this.$el.css("opacity", 0.75);
+                        this.$el.css("transform-origin", "center bottom")
+                            .css("transform", "rotate(15deg)");
                     }
                 }
             ]
