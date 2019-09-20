@@ -60,7 +60,7 @@
 
                 defer.resolve(maps);
 
-                google.maps.event.addDomListener(window, "load", init);
+                init();
             };
 
             return {
