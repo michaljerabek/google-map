@@ -448,11 +448,13 @@
             position = typeof options === "object" && !(options instanceof HTMLElement) ? options.coords : null,
             draw = typeof options === "object" && !(options instanceof HTMLElement) ? options.draw : null,
 
-            overlay = new GoogleMapHTMLOverlay(this.map, html, position, draw);
+            overlay,
+
+            resolve = function () { defer.resolve(this, overlay, id); }.bind(this);
+
+        overlay = new GoogleMapHTMLOverlay(this.map, html, position, draw, resolve);
 
         this.HTMLs[id] = overlay;
-
-        defer.resolve(this, overlay, id);
 
         return defer.promise();
     };

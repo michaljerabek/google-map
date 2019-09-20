@@ -11,7 +11,7 @@
      * position - [1, 1] | LatLng | Marker - suřadnice, kam HTML vložit (pokud není nastaveno, použije se location mapy)
      * drawFn (Function) - vlastní funkce pro vykreslení HTML na mapě
      */
-    var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn) {
+    var GoogleMapHTMLOverlay = window.GoogleMapHTMLOverlay = function GoogleMapHTMLOverlay(map, html, position, drawFn, resolve) {
 
         this.html = html;
 
@@ -19,6 +19,8 @@
         this.el = null;
 
         this.map = map;
+
+        this._resolve = resolve;
 
         if (drawFn) {
 
@@ -62,9 +64,11 @@
             this.$el
                 .css("position", "absolute")
                 .html(this.html)
-                .appendTo(panes.overlayLayer);
+                .appendTo(panes.overlayMouseTarget);
 
             this.el = this.$el[0];
+
+            this._resolve();
         };
 
         /*
@@ -73,16 +77,20 @@
          * */
         GoogleMapHTMLOverlay.prototype.draw = function() {
 
-            var overlayProjection = this.getProjection(),
+            var overlayProjection = this.getProjection();
 
-                position = overlayProjection.fromLatLngToDivPixel(this.position),
-                size = {
-                    width: this.el.offsetWidth,
-                    height: this.el.offsetHeight
-                };
+            this.pxPosition = overlayProjection.fromLatLngToDivPixel(this.position);
 
-            this.el.style.left = (position.x - (size.width / 2)) + "px";
-            this.el.style.top = (position.y - size.height) + "px";
+            this.size = {
+                width: this.el.offsetWidth || (this.size ? this.size.width: 0),
+                height: this.el.offsetHeight || (this.size ? this.size.height: 0)
+            };
+
+            if (this.size.width && this.size.height) {
+
+                this.el.style.left = (this.pxPosition.x - (this.size.width / 2)) + "px";
+                this.el.style.top = (this.pxPosition.y - this.size.height) + "px";
+            }
         };
 
         /*
