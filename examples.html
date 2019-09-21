@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Map</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .map {
+            height: 25vh;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <div id="map" class="map"></div>
+    <div id="map2" class="map"></div>
+    <div id="map3" class="map"></div>
+    <div id="map4" class="map"></div>
+    <div id="map5" class="map"></div>
+    <div id="map6" class="map"></div>
+    <div id="map7" class="map"></div>
+
+    <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <script src="src/GoogleMaps.js"></script>
+    <script src="src/GoogleMap.js"></script>
+    <script src="src/GoogleMapHTMLOverlay.js"></script>
+    <script src="src/GoogleMapStyle.js"></script>
+    <script src="src/styles/dark.js"></script>
+    <script src="src/styles/desaturate.js"></script>
+    <script src="src/styles/monochrome.js"></script>
+    <script src="src/styles/monochrome-dark.js"></script>
+<!--    <script src="googlemap-styles.build.min.js"></script>-->
+
+    <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
+
+        /*funkce se zavolá po spuštění googleMapsInit*/
+        GoogleMaps.onInit = function () {
+            console.log("GoogleMaps initialized!");
+        };
+
+        GoogleMaps.promise().then(function (maps) {
+
+            console.log(maps.length);
+        });
+
+        /*Základní mapa. Info se přidává až po inicializaci.*/
+        var map = new GoogleMap({
+            el: "#map",
+            icon: "marker.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("desaturate")/*,
+            onInit: function () {
+
+                map.addInfo({
+                    content: "Nazdárek!",
+                    marker: this.markers[this.markerId] //id markeru zadaného při inicializaci; id infa nebude v this.infoId, protože bylo přidáno až po inicializaci
+                });
+            }*/
+        });
+
+        map.promise().then(function (instance, marker, markerId) {
+
+            map.addInfo({
+                content: "Nazdárek!",
+                marker: marker
+            });
+
+            setTimeout(function() {
+
+                map.animate(marker, 700 * 3);
+
+            }, 500);
+        });
+
+        /*Základní mapa s upraveným stylem.*/
+        var map2 = new GoogleMap({
+            el: "#map2",
+//            icon: "marker2.png",
+            coords: [40.700565, -74.1180853],
+            zoom: 13,
+            styles: GoogleMap.getStyles("desaturate", function () {
+
+                /*Úprava kontrastu všech prvků.*/
+                this.set("all", "all", {
+                    gamma: 0.3,
+                    lightness: 40
+                });
+            })
+        });
+
+        map2.addMarker({
+            icon: "marker2.png",
+            coords: [40.700565, -74.1180853],
+            group: "A",
+            info: "Ahoj, tady je New York!"
+        });
+
+        map2.addMarker({
+            icon: "marker3.png",
+            coords: [40.700565, -74.1380853],
+            group: "A",
+            info: "Ahoj, tady je New York!"
+        });
+
+        map2.addMarker({
+            icon: "marker4.png",
+            coords: [40.709965, -74.1180853],
+            group: "B"
+        });
+
+        map2.addMarker({
+            icon: "marker.png",
+            coords: [40.709965, -74.1380853],
+            group: "B"
+        });
+
+        map2.promise().then(function (instance) {
+
+            setTimeout(function() {
+
+                instance.highlightGroup("B", 250, 0.5);
+
+            }, 3000);
+        });
+
+        /*Mapa s inverzním černobílým stylem.*/
+        var map3 = new GoogleMap({
+            el: "#map3",
+            icon: "marker3.png",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("dark")
+        });
+
+        /*Pridání markeru i s infem.*/
+        var map3MarkerPromise = map3.addMarker({
+            id: "ID",
+            icon: "marker.png",
+            coords: [40.705565, -74.1380853],
+            info: "Zdravíme!",
+            infoId: "ID"
+        });
+
+        map3MarkerPromise.then(function (instance, marker) {
+
+            console.log(instance.getInfo("ID"), marker);
+        });
+
+        /*Mapa s upraveným stylem. Přidává se marker až po inicilizaci a info k němu až po jeho vytvoření.*/
+        var map4 = new GoogleMap({
+            el: "#map4",
+            icon: "marker4.png",
+            coords: [40.705565, -74.1180853],
+
+            styles: GoogleMap.getStyles("dark", function () {
+
+                /*Snížit všemu gammu.*/
+                this.set("all", "all", {
+                    gamma: 0.75
+                });
+
+                /*Všechny výplně textu (obsažené ve stylu) se přepíší na růžovou.*/
+                this.all(null, "labels.text.fill", {
+                    color: "#dc143c"
+                });
+
+                /*Všechny výplně textu, které označují silnice (obsažené ve stylu), se přepíší na oranžovou.*/
+                this.all("road", "labels.text.fill", {
+                    color: "#fa8072"
+                });
+            }),
+
+            onInit: function () {
+
+                var markerPromise = this.addMarker({
+                    icon: "marker2.png",
+                    coords: [40.705565, -74.1380853]
+                });
+
+                markerPromise.then(function (instance, marker) {
+
+                    instance.addInfo({
+                        content: "Dobrý den!",
+                        marker: marker
+                    });
+                });
+            }
+        });
+
+
+        /*Mapa s více markery a s ovládacími prvky.*/
+        var map5 = new GoogleMap({
+            el: "#map5",
+            icon: "marker4.png",
+            markers: [
+                {
+                    coords: [40.705565, -74.1180853]
+                },
+                {
+                    coords: [40.705565, -74.1380853],
+                    info: "Druhý!"
+                }
+            ],
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("monochrome-dark", function () {
+
+                this.set("all", "all", {
+                    color: "#a55263"
+//                    color: "#58819b"
+                });
+
+            }),
+            controls: true
+        });
+
+
+        /*Mapa s vlastním HTML obsahem.*/
+        var map6 = new GoogleMap({
+            el: "#map6",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("monochrome", function () {
+
+                this.set("all", "all", {
+                    color: "#5694c3"
+                });
+
+            }),
+        });
+
+        //asi je dobrý tam vždycky nastavit fixní rozměry (width/height)
+        var html6 = [
+            "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
+                "<h3 style='color: crimson'>Tady je New York!</h3>",
+                "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+            "</div>"
+        ].join();
+
+        /*Proměná html bude Promise.*/
+        var html = map6.addHTML(html6);
+
+        html.then(function (instance, html) {
+
+            console.log(html);
+        });
+
+        /*Mapa s několika HTML boxy.*/
+        var map7 = new GoogleMap({
+            el: "#map7",
+            coords: [40.705565, -74.1180853],
+            styles: GoogleMap.getStyles("desaturate"),
+
+            html: [
+                {
+                    coords: [40.705565, -74.0880853],
+                    html: [
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative;'>",
+                            "<h3 style='color: crimson'>Tady je New York!</h3>",
+                            "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                            "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+                        "</div>"
+                    ].join()
+                },
+                {
+                    coords: [40.705565, -74.1480853],
+                    html: [
+                        "<div style='background: #222; text-align: center; padding: 5px 15px; transform: translateY(-10px); position: relative; text-indent: 0;'>",
+                            "<h3 style='color: deepskyblue'>Tady je New York!</h3>",
+                            "<p style='color: white'>A tohle jsou velmi zajímavé informace o něm.</p>",
+                            "<div style='position: absolute; bottom: -20px; left: calc(50% - 10px); border: 10px solid; border-color: #222 transparent transparent transparent'></div>",
+                        "</div>"
+                    ].join(),
+
+                    /*Vlastní vykraslovací funkce. Třeba protože potřebujeme HTML vykreslit jinde než uprostřed nad souřadnicemi.*/
+                    draw: function () {
+
+                        /*Původní funkce draw.*/
+                        GoogleMapHTMLOverlay.prototype.draw.apply(this, arguments);
+
+                        this.$el.css("transform-origin", "center bottom")
+                            .css("transform", "rotate(15deg)");
+                    }
+                }
+            ]
+        });
+
+    </script>
+
+    <!-- ---------------------------------------------------------------------------------------------------- !! callback=googleMapsInit !! -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfU5Ah0jIs2MKbGivBC_xWFwlvAmN9K6E&callback=googleMapsInit" async defer></script>
+
+
+</body>
+</html>

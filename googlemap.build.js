@@ -1,5 +1,5 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery, google, GoogleMap*/
+/*global jQuery, GoogleMap, window*/
 (function ($) {
 
     /**
@@ -59,8 +59,7 @@
                 }
 
                 defer.resolve(maps);
-
-                init();
+                defer.then(init);
             };
 
             return {
@@ -97,7 +96,8 @@
      *     info: "", - informace zobrazující se u výchozího markeru
      *     options: {}, - nastavení přidávající k mapě další nastavení
      *     controls: false, - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
-     *     centerToLocationOnResize: 100 | true - vycentrovat mapu na coords při změně velikosti okna | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
+     *     centerToLocationOnResize: 0 | true - vycentrovat mapu na coords při změně velikosti okna (pokud je zadáno coords) | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
+     *     fitBoundsOnResize: 0 | true - nastvit mapu při změně velikosti okna, aby byly vidět všechny markery (pokud není zadáno coords) | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
      * }
      * */
     var DEFAUlTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
@@ -106,7 +106,8 @@
             zoom: 14,
             controls: false,
             styles: [],
-            centerToLocationOnResize: 100
+            centerToLocationOnResize: 0,
+            fitBoundsOnResize: 0
         },
 
         GoogleMap = window.GoogleMap = function GoogleMap(options) {
@@ -117,11 +118,6 @@
             }
 
             this.options = $.extend({}, DEFAUlTS, options);
-
-            if (!this.options.coords) {
-
-                throw "Coords are required.";
-            }
 
             if (!this.options.el) {
 
@@ -141,6 +137,8 @@
             this.el = null;
             this.$el = null;
             this.map = null;
+
+            this._noCoordsOnInit = !this.options.coords;
 
             this._animations = {};
             this._$animEl = $("<div></div>");
@@ -233,6 +231,8 @@
      */
     GoogleMap.prototype.init = function () {
 
+        this.bounds = new google.maps.LatLngBounds();
+
         this.$el = this.options.el.jquery ? this.options.el : $(this.options.el);
         this.el = this.$el[0];
 
@@ -244,7 +244,7 @@
 
             mapOptions.location = this.options.coords;
 
-        } else {
+        } else if (this.options.coords) {
 
             mapOptions.location = new google.maps.LatLng(this.options.coords[0], this.options.coords[1]);
         }
@@ -280,6 +280,11 @@
         if (this.options.centerToLocationOnResize) {
 
             this.initCenterToLocationOnResize(this.options.centerToLocationOnResize);
+        }
+
+        if (this.options.fitBoundsOnResize) {
+
+            this.initFitBoundsOnResize(this.options.fitBoundsOnResize);
         }
 
         this.initialized = true;
@@ -327,6 +332,11 @@
         this._markers.forEach(this.addMarker.bind(this));
         this._infos.forEach(this.addInfo.bind(this));
         this._htmls.forEach(this.addHTML.bind(this));
+
+        if (this._noCoordsOnInit) {
+
+            this.fitBounds();
+        }
 
         if (typeof this.options.onInit === "function") {
 
@@ -405,8 +415,9 @@
         options.group = options.group || "no-group";
 
         this.groupedMarkers[options.group] = this.groupedMarkers[options.group] || {};
-
         this.groupedMarkers[options.group][id] = marker;
+
+        this.bounds.extend(marker.position);
 
         defer.resolve(this, marker, id);
 
@@ -583,7 +594,7 @@
      */
     GoogleMap.prototype.initCenterToLocationOnResize = function (ms) {
 
-        if (this.resizeInitialized) {
+        if (this.resizeCenterToLocationInitialized) {
 
             return;
         }
@@ -606,7 +617,40 @@
             _this.centerToLocation();
         });
 
-        this.resizeInitialized = true;
+        this.resizeCenterToLocationInitialized = true;
+    };
+
+    /**
+     * Při změně velikosti okna zarovná mapu tak, aby byly vidět všechny markery.
+     *
+     * ms (Number) - debouncing
+     */
+    GoogleMap.prototype.initFitBoundsOnResize = function (ms) {
+
+        if (this.resizeFitBoundsInitialized) {
+
+            return;
+        }
+
+        var debounce = typeof ms === "number",
+
+            _this = this;
+
+        google.maps.event.addDomListener(window, "resize", function () {
+
+            if (debounce) {
+
+                clearTimeout(debounce);
+
+                debounce = setTimeout(_this.fitBounds.bind(_this), ms);
+
+                return;
+            }
+
+            _this.fitBounds();
+        });
+
+        this.resizeFitBoundsInitialized = true;
     };
 
     /**
@@ -615,6 +659,14 @@
     GoogleMap.prototype.centerToLocation = function () {
 
         this.map.setCenter(this.map.location);
+    };
+
+    /**
+     * Zarovná mapu tak, aby byly viddět všechny markery.
+     */
+    GoogleMap.prototype.fitBounds = function () {
+
+        this.map.fitBounds(this.bounds);
     };
 
     /**
@@ -833,7 +885,6 @@
      */
     GoogleMap.prototype.showGroup = function (group, duration, easing) {
 
-
         this.groupOpacity(group, 1, duration, easing);
     };
 
@@ -928,7 +979,6 @@
 
                     marker.setVisible(true);
                 }
-
 
                 if (marker !== markerToHightlight && markerToHightlight === false && opacity === 0) {
 
