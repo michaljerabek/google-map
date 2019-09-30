@@ -30,17 +30,73 @@
     <script src="src/GoogleMaps.js"></script>
     <script src="src/GoogleMap.js"></script>
     <script src="src/GoogleMapHTMLOverlay.js"></script>
+    <script src="src/GoogleMapFeature.js"></script>
+    <script src="src/GoogleMapElement.js"></script>
+    <script src="src/GoogleMapStyler.js"></script>
+    <script src="src/GoogleMapStyleOption.js"></script>
     <script src="src/GoogleMapStyle.js"></script>
-    <script src="src/styles/dark.js"></script>
-    <script src="src/styles/desaturate.js"></script>
-    <script src="src/styles/monochrome.js"></script>
-    <script src="src/styles/monochrome-dark.js"></script>
+    <script src="src/styles/GoogleMapDarkStyle.js"></script>
+    <script src="src/styles/GoogleMapDesaturatedStyle.js"></script>
+    <script src="src/styles/GoogleMapMonochromeStyle.js"></script>
+    <script src="src/styles/GoogleMapMonochromeStyleDark.js"></script>
 <!--    <script src="googlemap-styles.build.min.js"></script>-->
 
-    <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
+    <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay, GoogleMapStyle*/
+
+        var style /*= new GoogleMapStyle()*/;
+
+//        builder.feature(GoogleMapFeature.highway)
+//            .element(GoogleMapElement.fill)
+//            .styler(GoogleMapStyler.color, "#ff0000")
+//            .add()
+//            .set(
+//                GoogleMapFeature.highway,
+//                GoogleMapElement.stroke,
+//                {
+//                    [GoogleMapStyler.color]: "#0000ff",
+//                    [GoogleMapStyler.lightness]: -50
+//                }
+//            )
+//            .add(
+//                GoogleMapFeature.arterial,
+//                GoogleMapElement.fill,
+//                { [GoogleMapStyler.color]: "#00ff00" }
+//            )
+//            .add(
+//                GoogleMapFeature.arterial,
+//                GoogleMapElement.stroke,
+//                { [GoogleMapStyler.color]: "#ff00ff" }
+//            )
+//            .add(
+//                GoogleMapFeature.all,
+//                GoogleMapElement.textFill,
+//                { [GoogleMapStyler.color]: "#777777" }
+//            )
+//            .add(
+//                GoogleMapFeature.administrative,
+//                GoogleMapElement.textFill,
+//                { [GoogleMapStyler.color]: "#005e80" }
+//            )
+//            .add(
+//                GoogleMapFeature.natural,
+//                GoogleMapElement.textFill,
+//                { [GoogleMapStyler.color]: "#0f8e45" }
+//            )
+
+//        style.use(GoogleMap.STYLES["monochrome-dark"]("#ceebed", 0.85));
+
+        style = new GoogleMapMonochromeStyleDark("#f9eff0", 0.85);
+
+        //        style.rewriteOrAdd(
+//            GoogleMapFeature.all,
+//            GoogleMapElement.all,
+//            { [GoogleMapStyler.color]: "#fbfefe" }
+//        );
 
         var map2 = new GoogleMap({
-            el: "#map2"
+            el: "#map2",
+            fitBoundsOnResize: 100,
+            styles: style
         });
 
         map2.addMarker({

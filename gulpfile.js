@@ -6,7 +6,11 @@ var concat = require("gulp-concat");
 
 gulp.task("js", function () {
 
-    gulp.src(["./src/GoogleMaps.js", "./src/*.js"])
+    gulp.src([
+            "./src/GoogleMaps.js",
+            "./src/GoogleMap.js",
+            "./src/GoogleMapHTMLOverlay.js"
+        ])
         .pipe(concat("googlemap.build.js"))
         .pipe(
             gulp.dest("./")
@@ -19,7 +23,39 @@ gulp.task("js", function () {
             gulp.dest("./")
         );
 
-    gulp.src(["./src/GoogleMaps.js", "./src/*.js", "./src/styles/*.js"])
+    gulp.src([
+            "./src/GoogleMaps.js",
+            "./src/GoogleMap.js",
+            "./src/GoogleMapHTMLOverlay.js",
+            "./src/GoogleMapFeature.js",
+            "./src/GoogleMapElement.js",
+            "./src/GoogleMapStyler.js",
+            "./src/GoogleMapStyleOption.js",
+            "./src/GoogleMapStyle.js"
+        ])
+        .pipe(concat("googlemap-style.build.js"))
+        .pipe(
+            gulp.dest("./")
+        )
+        .pipe(uglify())
+        .pipe(rename(function (path) {
+            path.basename = "googlemap-style.build.min";
+        }))
+        .pipe(
+            gulp.dest("./")
+        );
+
+    gulp.src([
+            "./src/GoogleMaps.js",
+            "./src/GoogleMap.js",
+            "./src/GoogleMapHTMLOverlay.js",
+            "./src/GoogleMapFeature.js",
+            "./src/GoogleMapElement.js",
+            "./src/GoogleMapStyler.js",
+            "./src/GoogleMapStyleOption.js",
+            "./src/GoogleMapStyle.js",
+            "./src/styles/*.js"
+        ])
         .pipe(concat("googlemap-styles.build.js"))
         .pipe(
             gulp.dest("./")

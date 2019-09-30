@@ -53,17 +53,11 @@
             /*Funkce, kterou zavolá skript Googlu (nastavená v callbacku).*/
             window.googleMapsInit = function googleMapsInit() {
 
-                if (typeof window.GoogleMaps.onInit === "function") {
-
-                    window.GoogleMaps.onInit(maps);
-                }
-
                 defer.resolve(maps);
                 defer.then(init);
             };
 
             return {
-                //window.GoogleMaps.onInit
                 addMap: addMap,
 
                 promise: function () {

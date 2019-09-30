@@ -1,374 +1,564 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global jQuery*/
+/*global jQuery, window, setTimeout, clearTimeout, GoogleMapStyler, GoogleMapFeature, GoogleMapElement, GoogleMapStyleOption*/
 
 (function ($) {
 
+    var FEATURE_ORDER = Object.keys(GoogleMapFeature).map(function (key) {
+        return GoogleMapFeature[key].toString();
+    });
+
+    var ELEMENT_ORDER = Object.keys(GoogleMapElement).map(function (key) {
+        return GoogleMapElement[key].toString();
+    });
 
     /**
-     * Třída obsahující styly pro mapu. Obsahuje jednoduché API pro upravování stylu.
-     *
-     * styles (Array) - styly pro mapu: https://developers.google.com/maps/documentation/javascript/style-reference
+     * Třída obsahující styly pro mapu. Obsahuje API pro upravování stylu.
+     * (Rozšiřuje Array)
      */
-    var GoogleMapStyle = window.GoogleMapStyle = function GoogleMapStyle(styles) {
-
-        this.styles = styles || [];
+    var GoogleMapStyle = window.GoogleMapStyle = function GoogleMapStyle() {
+        this.length = 0;
     };
 
-    /**
-     * Nastaví styly pro zadaný featureType a elementType. Pokud existuje, přepíše se. Jinak se vytvoří nový styl.
-     * https://developers.google.com/maps/documentation/javascript/style-reference
+    GoogleMapStyle.prototype = Object.create(Array.prototype);
+
+    /* Vloži již hotový seznam stylů.
      *
-     * featureType (String) - nastavovaná vlastnost
-     * elementType (String) - nastavovaný element
-     * styles - {
-     *     color: "#fff000",
-     *     lightness: 20
-     * }
-     * unsetSubtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     * styles (Array): styly [{ featureType: String, elementType: String, stylers: Array }, ...]
      */
-    GoogleMapStyle.prototype.set = function (featureType, elementType, styles, unsetSubtypes) {
+    GoogleMapStyle.prototype.use = function (styles) {
 
-        var styleFound = false;
+        styles.forEach(function (style) {
+            this.add(style.featureType, style.elementType, style.stylers);
+        }, this);
 
-        this.each(function (style) {
+        return this.reset();
+    };
 
-            if ((style.featureType === featureType || (!style.featureType && !featureType)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
+    /* Nastaví vlastnost pro aktuální (poslední) nastavení.
+     *
+     * type (String, Object) - název (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.feature = function (type) {
 
-                style.stylers = this.toStylers(styles);
+        if (typeof type === "string" || (typeof type === "object" && type !== null)) {
 
-                styleFound = true;
+            if (!this.length) {
 
-                return false;
+                this.add();
             }
-        });
 
-        if (!styleFound) {
+            this[this.length - 1].featureType = type.toString();
+        }
 
-            this.styles.push({
-                featureType: featureType,
-                elementType: elementType,
-                stylers: this.toStylers(styles)
+        return this.reset();
+    };
+
+    /* Nastaví elementu pro aktuální (poslední) nastavení.
+     *
+     * type (String, Object) - název (viz GoogleMapElement)
+     */
+    GoogleMapStyle.prototype.element = function (type) {
+
+        if (typeof type === "string" || (typeof type === "object" && type !== null)) {
+
+            if (!this.length) {
+
+                this.add();
+            }
+
+            this[this.length - 1].elementType = type.toString();
+        }
+
+        return this.reset();
+    };
+
+    /* Nastaví styler pro aktuální (poslední) nastavení.
+     *
+     * type (String, Object) - název (viz GoogleMapStyler),
+     * value - hodnota (viz GoogleMapStyler),
+     */
+    GoogleMapStyle.prototype.styler = function (type, value) {
+
+        if (typeof type === "string" || (typeof type === "object" && type !== null)) {
+
+            if (!this.length) {
+
+                this.add();
+            }
+
+            this[this.length - 1].set(type, value);
+        }
+
+        return this.reset();
+    };
+
+    /* Nastaví vlastnost, elementu a/nebo styler pro aktuální (poslední) nastavení.
+     *
+     * feature? (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * element? (String, Object) - název elementu (viz GoogleMapElement)
+     * stylers? (Object) - objekt se stylery (viz GoiogleMapStyler): { color: "#ffff00", weight: 0.5 }
+     */
+    GoogleMapStyle.prototype.set = function (feature, element, stylers) {
+
+        this.feature(feature);
+        this.element(element);
+        this.styler(stylers);
+
+        return this.reset();
+    };
+
+    /* Přidá další nastavení a nastaví pro něj vlastnost, element a/nebo styler.
+     *
+     * feature? (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * element? (String, Object) - název elementu (viz GoogleMapElement)
+     * stylers? (Object) - objekt se stylery (viz GoiogleMapStyler): { color: "#ffff00", weight: 0.5 }
+     */
+    GoogleMapStyle.prototype.add = function (feature, element, stylers) {
+
+        this[this.length++] = new GoogleMapStyleOption(this);
+
+        this.set(feature, element, stylers);
+
+        return this;
+    };
+
+    /* Odstraní nastavení podle zadanách hodnot
+     *
+     * indexOrOptionOrFeature (Number, String, Object, GoogleMapStyleOption, Array) - index, nastavení nebo název vlastnosti,
+     *     případně pole těchto hodnot
+     * element? (String, Object) - název elementu
+     * subTypes (Boolean) - odstranit i podtypy?
+     */
+    GoogleMapStyle.prototype.remove = function (indexOrOptionOrFeature, element, subTypes) {
+
+        if (indexOrOptionOrFeature instanceof Array) {
+
+            indexOrOptionOrFeature.forEach(function (option) {
+                this.remove(option);
+            }, this);
+
+            return this;
+        }
+
+        if (indexOrOptionOrFeature instanceof GoogleMapStyleOption) {
+
+            for (var o = this.length - 1; o >= 0; o--) {
+
+                if (indexOrOptionOrFeature === this[o]) {
+
+                    this.splice(o, 1);
+                }
+            }
+
+            return this.reset();
+        }
+
+        if (typeof indexOrOptionOrFeature === "number") {
+
+            this.splice(indexOrOptionOrFeature, 1);
+
+            return this.reset();
+        }
+
+        if (typeof indexOrOptionOrFeature === "string" || (typeof indexOrOptionOrFeature === "object" && indexOrOptionOrFeature !== null)) {
+
+            var options = this.get(indexOrOptionOrFeature, element, subTypes);
+
+            options.forEach(function (option) {
+                this.remove(option);
+            }, this);
+        }
+
+        return this;
+    };
+
+    /* Najde nastavení podle zadaných hodnot a vráti je v poli.
+     *
+     * feature? (String, Object) - název vlastnosti
+     * element? (String, Object) - název elementu
+     * subTypes? (Boolean) - vyhledávat i podtypy?
+     */
+    GoogleMapStyle.prototype.get = function (feature, element, subTypes) {
+
+        if (feature && !element) {
+
+            return this.filter(function (option) {
+                return option.isFeature(feature, subTypes);
             });
         }
 
-        if (unsetSubtypes) {
+        if (element && !feature) {
 
-            this.findSubtypes(featureType, elementType).forEach(function (style) {
-
-                this.unset(style.featureType, style.elementType);
-
-            }.bind(this));
+            return this.filter(function (option) {
+                return option.isElement(element, subTypes);
+            });
         }
+
+        return this.filter(function (option) {
+
+            if (subTypes) {
+
+                return option.isFeature(feature, true) && option.isElement(element, true);
+            }
+
+            return option.is(feature, element);
+        });
     };
 
-    /**
-     * Přepíše styly pro zadaný elementType ve všech featureType. Pokud je featureType false nebo "all", přenastaví se u všech,
-     * které odpovídají elementType. Pokud je featureType zadán, přenastaví se i všechny podtypy.
-     * https://developers.google.com/maps/documentation/javascript/style-reference
+    /* Nastaví styler pro existující nastavení podle feature a element nebo vytvoří nové nastavení.
      *
-     * featureType (String) - nastavovaná vlastnost
-     * elementType (String) - nastavovaný element
-     * styles - {
-     *     color: "#fff000",
-     *     lightness: 20
-     * }
-     * unsetSubtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     * feature? (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * element? (String, Object) - název elementu (viz GoogleMapElement)
+     * stylers? (Object) - objekt se stylery (viz GoiogleMapStyler): { color: "#ffff00", weight: 0.5 }
      */
-    GoogleMapStyle.prototype.all = function (featureType, elementType, styles, unsetSubtypes) {
+    GoogleMapStyle.prototype.rewriteOrAdd = function (feature, element, stylers) {
 
-        this.each(function (style) {
+        var found = false;
 
-            if ((style.featureType === featureType || !featureType || featureType === "all" || (style.featureType && style.featureType.indexOf(featureType + ".") === 0)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
+        this.forEach(function (option, s) {
 
-                style.stylers = this.toStylers(styles);
+            if (option.is(feature, element)) {
+
+                this[s].set(stylers);
+
+                found = true;
             }
+        }, this);
+
+        if (!found) {
+
+            this.add((feature && feature.toString()) || GoogleMapFeature.all, element, stylers);
+        }
+
+        return this.reset();
+    };
+
+    /* Seřadí nastavení, aby zanořená následovala po rodičovských.
+     *
+     * Např: roads.arterial, roads, roads.local => roads, roads.arterial, roads.local
+     */
+    GoogleMapStyle.prototype.sort = function () {
+
+        if (arguments.length) {
+
+            Array.prototype.sort.apply(this, arguments);
+
+            return this.reset();
+        }
+
+        this.sort(function(a, b) {
+            return FEATURE_ORDER.indexOf(a.featureType) - FEATURE_ORDER.indexOf(b.featureType) ||
+                ELEMENT_ORDER.indexOf(a.elementType) - ELEMENT_ORDER.indexOf(b.elementType);
         });
 
-        if (unsetSubtypes) {
-
-            this.findSubtypes(featureType, elementType).forEach(function (style) {
-
-                this.unset(style.featureType, style.elementType);
-
-            }.bind(this));
-        }
+        return this.reset();
     };
 
-    /**
-     * Odstraní všechy styly pro zadaný featureType a elementType.
-     * https://developers.google.com/maps/documentation/javascript/style-reference
-     *
-     * featureType (String) - odstraňovaná vlastnost
-     * elementType (String) - odstraňovaný element
-     * styles - {
-     *     color: "#fff000",
-     *     lightness: 20
-     * }
-     * subtypes (Boolean) - odstraní všechny styly, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+    /* Přepíše nastavení stylů v mapě (zobrazí změněná nastavení) - používá debouncing.
      */
-    GoogleMapStyle.prototype.unset = function (featureType, elementType, subtypes) {
+    GoogleMapStyle.prototype.reset = function () {
 
-        this.each(function (style, i) {
+        this.cancelReset();
 
-            if ((style.featureType === featureType || (!style.featureType && !featureType)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
+        this.resetTimeout = setTimeout(function() {
 
-                this.styles.splice(i, 1);
+            if (this.googleMap && this.googleMap.map) {
 
-                return false;
-            }
-        });
-
-        if (subtypes) {
-
-            this.findSubtypes(featureType, elementType).forEach(function (style) {
-
-                this.unset(style.featureType, style.elementType);
-
-            }.bind(this));
-        }
-    };
-
-    /**
-     * Přidá styly k zadanému featureType a elementType. Pokud kombinace neexistuje, vytvoří se nový styl.
-     * Pokud vlastnost již u stylu je, přepíše se.
-     * https://developers.google.com/maps/documentation/javascript/style-reference
-     *
-     * featureType (String) - nastavovaná vlastnost
-     * elementType (String) - nastavovaný element
-     * styles - {
-     *     color: "#fff000",
-     *     lightness: 20
-     * }
-     * removeSubtypes (Boolean) - odstraní všechny styly specifikované ve styles, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
-     */
-    GoogleMapStyle.prototype.add = function (featureType, elementType, styles, removeSubtypes) {
-
-        var styleFound = false;
-
-        this.each(function (style) {
-
-            if ((style.featureType === featureType || (!style.featureType && !featureType)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
-
-                $.each(styles, function (name, newValue) {
-
-                    var found = false;
-
-                    $.each(style.stylers, function (i, styler) {
-
-                        if (typeof styler[name] !== "undefined") {
-
-                            style.stylers[i][name] = newValue;
-
-                            found = true;
-
-                            return false;
-                        }
-                    });
-
-                    if (!found) {
-
-                        var newStyler = {};
-
-                        newStyler[name] = newValue;
-
-                        style.stylers = style.stylers || [];
-
-                        style.stylers.push(newStyler);
-                    }
+                this.googleMap.map.setOptions({
+                    styles: this
                 });
-
-                styleFound = true;
-
-                return false;
             }
-        });
 
-        if (!styleFound) {
+        }.bind(this), 0);
 
-            this.set(featureType, elementType, styles);
-        }
-
-        if (removeSubtypes) {
-
-            this.findSubtypes(featureType, elementType).forEach(function (style) {
-
-                this.remove(style.featureType, style.elementType, Object.keys(styles));
-
-            }.bind(this));
-        }
+        return this;
     };
 
-    /**
-     * Odstraní styly patřící k featureType a elementType.
-     * https://developers.google.com/maps/documentation/javascript/style-reference
+    /* Zruši debouncing z metory reset.
+     */
+    GoogleMapStyle.prototype.cancelReset = function () {
+
+        clearTimeout(this.resetTimeout);
+
+        return this;
+    };
+
+    /* Skryje zadanout vlastnost.
      *
-     * featureType (String) - vlastnost, ze které se styl odsraňuje
-     * elementType (String) - element, ze kterého se styl odsraňuje
-     * styles (String | Array) - styly, které se mají odstranit
-     * subtypes (Boolean) - odstraní všechny styly specifikované ve styles, které jsou podtypem tohoto stylu (viz GoogleMapStyle.prototype.findSubtypes)
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
      */
-    GoogleMapStyle.prototype.remove = function (featureType, elementType, styles, subtypes) {
+    GoogleMapStyle.prototype.hide = function (feature) {
 
-        styles = typeof styles === "string" ? [styles] : styles;
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
 
-        var styleFound = false;
-
-        this.each(function (style) {
-
-            if ((style.featureType === featureType || (!style.featureType && !featureType)) && (style.elementType === elementType || (!style.elementType && !elementType))) {
-
-                styles.forEach(function (name) {
-
-                    $.each(style.stylers, function (i, styler) {
-
-                        if (typeof styler[name] !== "undefined") {
-
-                            style.stylers.splice(i, 1);
-
-                            return false;
-                        }
-                    });
-                }.bind(this));
-
-                if (!style.stylers.length) {
-
-                    this.unset(featureType, elementType);
-                }
-
-                styleFound = true;
-
-                return false;
-            }
-        });
-
-        if (!styleFound) {
-
-            this.unset(featureType, elementType, subtypes);
-        }
-
-        if (subtypes) {
-
-            this.findSubtypes(featureType, elementType).forEach(function (style) {
-
-                this.remove(style.featureType, style.elementType, styles);
-
-            }.bind(this));
-        }
+        return this.rewriteOrAdd(feature, GoogleMapElement.all, styler);
     };
 
-    /**
-     * Převede objekt se styly na stylery vyžadované Google Maps API.
-     */
-    GoogleMapStyle.prototype.toStylers = function (styles) {
-
-        var stylers = [];
-
-        $.each(styles, function (name, value) {
-
-            var styler = {};
-
-            styler[name] = value;
-
-            stylers.push(styler);
-        });
-
-        return stylers;
-    };
-
-    /**
-     * Vyhledá všechny podtypy pro featureType a elementType a vrátí je v poli.
-     * Logika je komplikovaná, ale asi ne moc geniální. FeatureType je považován za
-     * důležitější než elementType, takže pokud není featureType zadán, pak podtypy
-     * elementTypu, které jsou zároveň přiřazeny k featureType nejsou považovány za podtyp.
+    /* Skryje text zadané vlastnosti.
      *
-     * featureType (String) - vlastnost, podle které se hledá podtyp
-     * elementType (String) - element, podle kterého se hledá podtyp
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
      */
-    GoogleMapStyle.prototype.findSubtypes = function (featureType, elementType) {
+    GoogleMapStyle.prototype.hideText = function (feature) {
 
-        var substyles = [],
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
 
-            featureTypeDot = featureType ? featureType + "." : null,
-            elementTypeDot = elementType ? elementType + "." : null;
-
-        this.each(function (style) {
-
-            var added = false,
-
-                styleHasFeature = !!style.featureType,
-                styleHasElement = !!style.elementType,
-                styleIsFeature = style.featureType === featureType,
-                styleIsElement = style.elementType === elementType,
-                styleIsFeatureSubtype = styleHasFeature && (style.featureType.indexOf(featureTypeDot) === 0 || (featureType === "all" && style.featureType !== "all")),
-                styleIsElementSubtype = styleHasElement && (style.elementType.indexOf(elementTypeDot) === 0 || (elementType === "all" && style.elementType !== "all"));
-
-            if ((!styleHasFeature && !featureType) || (styleHasFeature && (styleIsFeature || styleIsFeatureSubtype))) {
-
-                if (styleHasElement && styleIsElementSubtype) {
-
-                    added = substyles.push(style);
-                }
-            }
-
-            if (!added && (!elementType && (!styleHasElement || (styleHasFeature && styleIsFeatureSubtype)))) {
-
-                if (styleHasFeature && styleIsFeatureSubtype) {
-
-                    added = substyles.push(style);
-                }
-            }
-
-            if (!added && styleHasFeature && styleHasElement) {
-
-                if (((styleIsFeature && styleIsElementSubtype) || (styleIsFeatureSubtype && styleIsElement)) || (styleIsElementSubtype && styleIsFeatureSubtype)) {
-
-                    added = substyles.push(style);
-                }
-
-                if (!added && styleIsFeature && !elementType && styleHasElement) {
-
-                    added = substyles.push(style);
-                }
-            }
-        });
-
-        return substyles;
+        return this.rewriteOrAdd(feature, GoogleMapElement.text, styler);
     };
 
-    /**
-     * Spustí funkci pro každý styl.
+    /* Skryje výplň textu zadané vlastnosti.
      *
-     * fnOrDeep (Function, Boolean) - v případě true, zavolá funkci pro každý styl
-     * fn (Function)
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
      */
-    GoogleMapStyle.prototype.each = function (fnOrDeep, fn) {
+    GoogleMapStyle.prototype.hideTextFill = function (feature) {
 
-        if (fnOrDeep === true) {
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
 
-            this.getStyles().forEach(function (style) {
+        return this.rewriteOrAdd(feature, GoogleMapElement.text.fill, styler);
+    };
 
-                if (style.stylers) {
+    /* Skryje čáru textu zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideTextStroke = function (feature) {
 
-                    style.stylers.forEach(function (styler) {
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
 
-                        fn.call(this, styler, style.featureType, style.elementType);
-                    });
-                }
-            });
+        return this.rewriteOrAdd(feature, GoogleMapElement.text.stroke, styler);
+    };
 
-            return;
+    /* Skryje ikonu zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideIcon = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.icon, styler);
+    };
+
+    /* Skryje popisek zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideLabels = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.labels, styler);
+    };
+
+    /* Skryje geometrii zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideGeometry = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry, styler);
+    };
+
+    /* Skryje výplň zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideFill = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry.fill, styler);
+    };
+
+    /* Skryje čáru textu zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.hideStroke = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.off);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry.stroke, styler);
+    };
+
+    /* Zobrazí zadanou vlastnost a případně nastaví barvu a světlost (lightness).
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     */
+    GoogleMapStyle.prototype.show = function (feature, color, lightness) {
+
+        var styler = this.getFillStyler(color, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.all, styler);
+    };
+
+    /* Zobrazí text zadané vlastnosti a případně nastaví barvu a světlost (lightness).
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     */
+    GoogleMapStyle.prototype.text = function (feature, color, lightness) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.on);
+
+        if (color) {
+            styler[GoogleMapStyler.color] = color;
         }
 
-        this.getStyles().forEach(fnOrDeep.bind(this));
+        if (lightness) {
+            styler[GoogleMapStyler.lightness] = lightness;
+        }
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.text, styler);
     };
 
-    /**
-     * Vratí pole se styly.
+    /* Zobrazí výplň textu zadané vlastnosti a případně nastaví barvu a světlost (lightness).
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
      */
-    GoogleMapStyle.prototype.getStyles = function () {
+    GoogleMapStyle.prototype.textFill = function (feature, color, lightness) {
 
-        return this.styles;
+        var styler = this.getFillStyler(color, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.text.fill, styler);
     };
 
+    /* Zobrazí čáru textu zadané vlastnosti a případně nastaví barvu, světlost (lightness) a sílu.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     * weight? (Number) - síla čáry (styler weight)
+     */
+    GoogleMapStyle.prototype.textStroke = function (feature, color, lightness, weight) {
+
+        var styler = this.getStrokeStyler(color, weight, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.text.stroke, styler);
+    };
+
+    /* Zobrazí ikonu zadané vlastnosti.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     */
+    GoogleMapStyle.prototype.icon = function (feature) {
+
+        var styler = this.getVisibilityStyler(GoogleMapStyler.visibility.on);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.icon, styler);
+    };
+
+    /* Zobrazí popisek zadané vlastnosti a případně nastaví barvu, světlost (lightness) a sílu čáry.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     * weight? (Number) - síla čáry (styler weight)
+     */
+    GoogleMapStyle.prototype.labels = function (feature, color, lightness, weight) {
+
+        var styler = this.getStrokeStyler(color, weight, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.labels, styler);
+    };
+
+    /* Zobrazí geometrii zadané vlastnosti a případně nastaví barvu, světlost (lightness) a sílu čáry.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     * weight? (Number) - síla čáry (styler weight)
+     */
+    GoogleMapStyle.prototype.geometry = function (feature, color, lightness, weight) {
+
+        var styler = this.getStrokeStyler(color, weight, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry, styler);
+    };
+
+    /* Zobrazí výplň zadané vlastnosti a případně nastaví barvu a světlost (lightness).
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     */
+    GoogleMapStyle.prototype.fill = function (feature, color, lightness) {
+
+        var styler = this.getFillStyler(color, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry.fill, styler);
+    };
+
+    /* Zobrazí čáru zadané vlastnosti a případně nastaví barvu, světlost (lightness) a sílu.
+     *
+     * feature (String, Object) - název vlastnosti (viz GoogleMapFeature)
+     * color? (String) - barva (styler color)
+     * lightness? (Number) - světlost (styler lightness)
+     * weight? (Number) - síla čáry (styler weight)
+     */
+    GoogleMapStyle.prototype.stroke = function (feature, color, lightness, weight) {
+
+        var styler = this.getStrokeStyler(color, weight, lightness);
+
+        return this.rewriteOrAdd(feature, GoogleMapElement.geometry.stroke, styler);
+    };
+
+
+    /* Pro interní účely. Vrátí styler visibility.
+     *
+     * state - hodnota styleru visibility
+     */
+    GoogleMapStyle.prototype.getVisibilityStyler = function (state) {
+
+        var styler = {};
+        styler[GoogleMapStyler.visibility] = state.toString();
+
+        return styler;
+    };
+
+    /* Pro interní účely. Vrátí stylery pro výplň.
+     *
+     * color (String) - hodnota styleru color
+     * lightness (Nubmer) - hodnota styleru lightness
+     * excludeVisibility (Boolean) - nepřidávat styler visibility
+     */
+    GoogleMapStyle.prototype.getFillStyler = function (color, lightness, excludeVisibility) {
+
+        var styler = excludeVisibility ? {} : this.getVisibilityStyler(GoogleMapStyler.visibility.on);
+
+        if (typeof color === "string") {
+            styler[GoogleMapStyler.color] = color;
+        }
+
+        if (typeof lightness === "number" || typeof lightness === "string") {
+            styler[GoogleMapStyler.lightness] = lightness;
+        }
+
+        return styler;
+    };
+
+    /* Pro interní účely. Vrátí stylery pro čáru.
+     *
+     * color (String) - hodnota styleru color
+     * weight (Nubmer) - hodnota styleru weight
+     * lightness (Nubmer) - hodnota styleru lightness
+     * excludeVisibility (Boolean) - nepřidávat styler visibility
+     */
+    GoogleMapStyle.prototype.getStrokeStyler = function (color, weight, lightness, excludeVisibility) {
+
+        var styler = this.getFillStyler(color, lightness, excludeVisibility);
+
+        if (typeof weight === "number" || typeof weight === "string") {
+            styler[GoogleMapStyler.weight] = weight;
+        }
+
+        return styler;
+    };
 
 }(jQuery));

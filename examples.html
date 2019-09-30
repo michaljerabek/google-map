@@ -30,23 +30,11 @@
 
     <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
 
-    <script src="src/GoogleMaps.js"></script>
-    <script src="src/GoogleMap.js"></script>
-    <script src="src/GoogleMapHTMLOverlay.js"></script>
-    <script src="src/GoogleMapStyle.js"></script>
-    <script src="src/styles/dark.js"></script>
-    <script src="src/styles/desaturate.js"></script>
-    <script src="src/styles/monochrome.js"></script>
-    <script src="src/styles/monochrome-dark.js"></script>
-<!--    <script src="googlemap-styles.build.min.js"></script>-->
+    <script src="googlemap-styles.build.min.js"></script>
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
 
         /*funkce se zavolá po spuštění googleMapsInit*/
-        GoogleMaps.onInit = function () {
-            console.log("GoogleMaps initialized!");
-        };
-
         GoogleMaps.promise().then(function (maps) {
 
             console.log(maps.length);
@@ -57,7 +45,8 @@
             el: "#map",
             icon: "marker.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("desaturate")/*,
+            styles: new GoogleMapDesaturatedStyle(),
+            centerToLocationOnResize: 100/*,
             onInit: function () {
 
                 map.addInfo({
@@ -82,19 +71,20 @@
         });
 
         /*Základní mapa s upraveným stylem.*/
+
+        var map2Style = new GoogleMapDesaturatedStyle();
+        map2Style.add(GoogleMapFeature.all, GoogleMapElement.all, {
+            gamma: 0.3,
+            lightness: 40
+        })
+
         var map2 = new GoogleMap({
             el: "#map2",
 //            icon: "marker2.png",
             coords: [40.700565, -74.1180853],
             zoom: 13,
-            styles: GoogleMap.getStyles("desaturate", function () {
-
-                /*Úprava kontrastu všech prvků.*/
-                this.set("all", "all", {
-                    gamma: 0.3,
-                    lightness: 40
-                });
-            })
+            styles: map2Style,
+            fitBoundsOnResize: 100
         });
 
         map2.addMarker({
@@ -137,7 +127,7 @@
             el: "#map3",
             icon: "marker3.png",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("dark")
+            styles: new GoogleMapDarkStyle()
         });
 
         /*Pridání markeru i s infem.*/
@@ -146,37 +136,39 @@
             icon: "marker.png",
             coords: [40.705565, -74.1380853],
             info: "Zdravíme!",
-            infoId: "ID"
+            infoId: "ID",
+            fitBoundsOnResize: 100
         });
 
         map3MarkerPromise.then(function (instance, marker) {
 
             console.log(instance.getInfo("ID"), marker);
+
+            map3.fitBounds();
         });
 
         /*Mapa s upraveným stylem. Přidává se marker až po inicilizaci a info k němu až po jeho vytvoření.*/
+        var map4Style = new GoogleMapDarkStyle();
+
+        /*Snížit všemu gammu.*/
+        map4Style.add("all", "all", { gamma: 0.75 });
+
+        /*Všechny výplně textu (obsažené ve stylu) se přepíší na růžovou.*/
+        map4Style.get(null, GoogleMapElement.textFill, true).forEach(function (option) {
+            option.set("color", "#dc143c");
+        });
+
+        /*Všechny výplně textu, které označují silnice (obsažené ve stylu), se přepíší na oranžovou.*/
+        map4Style.get(GoogleMapFeature.road, GoogleMapElement.textFill, true).forEach(function (option) {
+            option.set("color", "#fa8072");
+        });
+
         var map4 = new GoogleMap({
             el: "#map4",
             icon: "marker4.png",
             coords: [40.705565, -74.1180853],
-
-            styles: GoogleMap.getStyles("dark", function () {
-
-                /*Snížit všemu gammu.*/
-                this.set("all", "all", {
-                    gamma: 0.75
-                });
-
-                /*Všechny výplně textu (obsažené ve stylu) se přepíší na růžovou.*/
-                this.all(null, "labels.text.fill", {
-                    color: "#dc143c"
-                });
-
-                /*Všechny výplně textu, které označují silnice (obsažené ve stylu), se přepíší na oranžovou.*/
-                this.all("road", "labels.text.fill", {
-                    color: "#fa8072"
-                });
-            }),
+            styles: map4Style,
+            fitBoundsOnResize: 100,
 
             onInit: function () {
 
@@ -210,15 +202,9 @@
                 }
             ],
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("monochrome-dark", function () {
-
-                this.set("all", "all", {
-                    color: "#a55263"
-//                    color: "#58819b"
-                });
-
-            }),
-            controls: true
+            styles: new GoogleMapMonochromeStyleDark("#a55263"),
+            controls: true,
+            fitBoundsOnResize: 100
         });
 
 
@@ -226,13 +212,8 @@
         var map6 = new GoogleMap({
             el: "#map6",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("monochrome", function () {
-
-                this.set("all", "all", {
-                    color: "#5694c3"
-                });
-
-            }),
+            styles: new GoogleMapMonochromeStyle("#5694c3"),
+            centerToLocationOnResize: 100
         });
 
         //asi je dobrý tam vždycky nastavit fixní rozměry (width/height)
@@ -256,7 +237,8 @@
         var map7 = new GoogleMap({
             el: "#map7",
             coords: [40.705565, -74.1180853],
-            styles: GoogleMap.getStyles("desaturate"),
+            styles: new GoogleMapDesaturatedStyle(),
+            fitBoundsOnResize: 100,
 
             html: [
                 {

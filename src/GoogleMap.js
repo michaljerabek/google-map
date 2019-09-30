@@ -56,6 +56,8 @@
                 this.options.styles = GoogleMap.DEFAULTS.styles;
             }
 
+            this.options.styles.googleMap = this;
+
             this.el = null;
             this.$el = null;
             this.map = null;
@@ -171,14 +173,7 @@
             mapOptions.location = new google.maps.LatLng(this.options.coords[0], this.options.coords[1]);
         }
 
-        if (this.options.styles instanceof GoogleMapStyle) {
-
-            mapOptions.styles = this.options.styles.getStyles();
-
-        } else {
-
-            mapOptions.styles = this.options.styles;
-        }
+        mapOptions.styles = this.options.styles || (window.GoogleMapStyle ? new GoogleMapStyle(): GoogleMap.STYLES.empty());
 
         mapOptions.center = mapOptions.location;
 
@@ -479,34 +474,6 @@
     GoogleMap.prototype.getHTML = function (id) {
 
         return this.HTMLs[id] || null;
-    };
-
-    /**
-     * Varátí styl podle jména. Pokud styl neexistuje, vrátí styl "empty".
-     * Vrací instanci GoogleMapStyle.
-     *
-     * name (String) - název stylu
-     * modifier (Function) - funkce pro úpravu stylu
-     */
-    GoogleMap.getStyles = function (name, modifier) {
-
-        var style;
-
-        if (!GoogleMap.STYLES[name]) {
-
-            style = new GoogleMapStyle(GoogleMap.STYLES.empty());
-
-        } else {
-
-            style = new GoogleMapStyle(GoogleMap.STYLES[name]());
-        }
-
-        if (typeof modifier === "function") {
-
-            modifier.call(style);
-        }
-
-        return style;
     };
 
     /**

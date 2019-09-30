@@ -1,9 +1,9 @@
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
-/*global GoogleMap*/
+/*global GoogleMapStyle*/
 
-GoogleMap.STYLES.dark = function () {
+function GoogleMapDarkStyle() {
 
-    return [
+    this.use([
         {
             "elementType": "geometry",
             "stylers": [
@@ -188,5 +188,8 @@ GoogleMap.STYLES.dark = function () {
                 }
             ]
         }
-    ];
-};
+    ]);
+}
+
+GoogleMapDarkStyle.prototype = Object.create(GoogleMapStyle.prototype);
+GoogleMapDarkStyle.prototype.constructor = GoogleMapDarkStyle;
