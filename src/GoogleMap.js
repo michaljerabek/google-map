@@ -32,6 +32,7 @@
             styles: [],
             coords: "center", //"center" || "bounds"
             centerToLocationOnResize: 0,
+            centerToBoundsCenterOnResize: 0,
             fitBoundsOnResize: 0
         },
 
@@ -631,7 +632,7 @@
     };
 
     /**
-     * Zarovná mapu na střed zadaného objektu.
+     * Zarovná mapu na střed zadaného objektu nebo do středu bounds.
      *
      * object (String) - id Markeru nabo HTML
      * object (LatLng, Array) - souřadnice

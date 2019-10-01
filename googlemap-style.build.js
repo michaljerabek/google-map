@@ -104,6 +104,7 @@
             styles: [],
             coords: "center", //"center" || "bounds"
             centerToLocationOnResize: 0,
+            centerToBoundsCenterOnResize: 0,
             fitBoundsOnResize: 0
         },
 
@@ -703,7 +704,7 @@
     };
 
     /**
-     * Zarovná mapu na střed zadaného objektu.
+     * Zarovná mapu na střed zadaného objektu nebo do středu bounds.
      *
      * object (String) - id Markeru nabo HTML
      * object (LatLng, Array) - souřadnice
@@ -1297,7 +1298,7 @@
                 args[0] = 0;
             }
 
-            return this.$el.fadeIn.apply(this.$el, args);
+            return this.$el.stop().fadeIn.apply(this.$el, args);
         };
 
         /*pokud je animate false, duration se nastaví na 0*/
@@ -1310,12 +1311,12 @@
                 args[0] = 0;
             }
 
-            return this.$el.fadeOut.apply(this.$el, args);
+            return this.$el.stop().fadeOut.apply(this.$el, args);
         };
 
         GoogleMapHTMLOverlay.prototype.animate = function() {
 
-            return this.$el.animate.apply(this.$el, arguments);
+            return this.$el.stop().animate.apply(this.$el, arguments);
         };
 
         GoogleMapHTMLOverlay.prototype.css = function() {
