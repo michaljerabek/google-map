@@ -30,7 +30,20 @@
 
     <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
 
-    <script src="googlemap-styles.build.min.js"></script>
+    <script src="src/GoogleMaps.js"></script>
+    <script src="src/GoogleMap.js"></script>
+    <script src="src/GoogleMapHTMLOverlay.js"></script>
+    <script src="src/GoogleMapFeature.js"></script>
+    <script src="src/GoogleMapElement.js"></script>
+    <script src="src/GoogleMapStyler.js"></script>
+    <script src="src/GoogleMapStyleOption.js"></script>
+    <script src="src/GoogleMapStyle.js"></script>
+    <script src="src/styles/GoogleMapDarkStyle.js"></script>
+    <script src="src/styles/GoogleMapDesaturatedStyle.js"></script>
+    <script src="src/styles/GoogleMapMonochromeStyle.js"></script>
+    <script src="src/styles/GoogleMapMonochromeStyleDark.js"></script>
+
+<!--    <script src="googlemap-styles.build.min.js"></script>-->
 
     <script>/*global GoogleMap, GoogleMaps, GoogleMapHTMLOverlay*/
 
@@ -80,8 +93,8 @@
 
         var map2 = new GoogleMap({
             el: "#map2",
+            coords: "center",
 //            icon: "marker2.png",
-            coords: [40.700565, -74.1180853],
             zoom: 13,
             styles: map2Style,
             fitBoundsOnResize: 100
@@ -127,7 +140,8 @@
             el: "#map3",
             icon: "marker3.png",
             coords: [40.705565, -74.1180853],
-            styles: new GoogleMapDarkStyle()
+            styles: new GoogleMapDarkStyle(),
+            centerToBoundsCenterOnResize: 100
         });
 
         /*Pridání markeru i s infem.*/
@@ -136,8 +150,7 @@
             icon: "marker.png",
             coords: [40.705565, -74.1380853],
             info: "Zdravíme!",
-            infoId: "ID",
-            fitBoundsOnResize: 100
+            infoId: "ID"
         });
 
         map3MarkerPromise.then(function (instance, marker) {
@@ -168,7 +181,6 @@
             icon: "marker4.png",
             coords: [40.705565, -74.1180853],
             styles: map4Style,
-            fitBoundsOnResize: 100,
 
             onInit: function () {
 
@@ -201,7 +213,7 @@
                     info: "Druhý!"
                 }
             ],
-            coords: [40.705565, -74.1180853],
+            coords: "bounds",
             styles: new GoogleMapMonochromeStyleDark("#a55263"),
             controls: true,
             fitBoundsOnResize: 100
@@ -236,9 +248,9 @@
         /*Mapa s několika HTML boxy.*/
         var map7 = new GoogleMap({
             el: "#map7",
-            coords: [40.705565, -74.1180853],
+            coords: "center",
             styles: new GoogleMapDesaturatedStyle(),
-            fitBoundsOnResize: 100,
+            centerToBoundsCenterOnResize: 100,
 
             html: [
                 {

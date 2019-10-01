@@ -81,6 +81,7 @@
      * options - {
      *     el: "#map" | $() | HTMLElement, - element, do kterého se vloží mapa
      *     coords: [50.0879712, 14.4172372] | LatLng, - souřadnice "výchozího místa" (použije se jako střed mapy, což lze přepsat v options)
+     *     coords: "center" | "bounds" - zarovnat na střed markerů/html | zobrazit všechny markery/html
      *     icon: "marker.png", - obrázek pro vlastní pin
      *     markers: [{icon: "marker.png", coords: [], info: "", options: {}, id: "" | 0, group: ""}], - více vlastních pinů
      *     addMarker: false, - jestli přidávat marker, pokud není nastaveno icon
@@ -92,14 +93,16 @@
      *     controls: false, - ne/zobrazovat všechny ovládací prvky (lze přepsat v options)
      *     centerToLocationOnResize: 0 | true - vycentrovat mapu na coords při změně velikosti okna (pokud je zadáno coords) | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
      *     fitBoundsOnResize: 0 | true - nastvit mapu při změně velikosti okna, aby byly vidět všechny markery (pokud není zadáno coords) | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
+     *     centerToBoundsCenterOnResize: 0 | true - nastvit mapu při změně velikosti okna, na střed všech markerů/html | číslo nastavuje, za jak dlouho po události resize považovat změnu velikosti za ukončenou
      * }
      * */
-    var DEFAUlTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
+    var DEFAULTS = { /*Výchozí nastavení je možné změnit v GoogleMap.DEFAULTS.*/
             el: "#map",
 
             zoom: 14,
             controls: false,
             styles: [],
+            coords: "center", //"center" || "bounds"
             centerToLocationOnResize: 0,
             fitBoundsOnResize: 0
         },
@@ -108,33 +111,16 @@
 
             if (typeof options !== "object") {
 
-                throw "Options required.";
+                throw "Options required!";
             }
 
-            this.options = $.extend({}, DEFAUlTS, options);
-
-            if (!this.options.el) {
-
-                this.options.el = GoogleMap.DEFAULTS.el;
-            }
-
-            if (!this.options.zoom) {
-
-                this.options.zoom = GoogleMap.DEFAULTS.zoom;
-            }
-
-            if (!this.options.styles) {
-
-                this.options.styles = GoogleMap.DEFAULTS.styles;
-            }
+            this.options = $.extend({}, DEFAULTS, options);
 
             this.options.styles.googleMap = this;
 
             this.el = null;
             this.$el = null;
             this.map = null;
-
-            this._noCoordsOnInit = !this.options.coords;
 
             this._animations = {};
             this._$animEl = $("<div></div>");
@@ -210,9 +196,50 @@
 
                 info.open(this.map, this);
             });
+        },
+
+        getLocationFromCoordsOption = function (option) {
+
+            if (option instanceof google.maps.LatLng) {
+
+                return option;
+
+            } else if (option instanceof Array) {
+
+                return new google.maps.LatLng(option[0], option[1]);
+            }
+
+            return null;
+        },
+
+        getInitialLocation = function () {
+
+            var location = getLocationFromCoordsOption(this.options.coords);
+
+            if (!location && this.options.markers && this.options.markers[0] && this.options.markers[0].coords) {
+
+                location = getLocationFromCoordsOption(this.options.markers[0].coords);
+            }
+
+            if (!location && this._markers && this._markers[0] && this._markers[0].coords) {
+
+                location = getLocationFromCoordsOption(this._markers[0].coords);
+            }
+
+            if (!location && this.options.html && this.options.html[0] && this.options.html[0].coords) {
+
+                location = getLocationFromCoordsOption(this.options.html[0].coords);
+            }
+
+            if (!location && this._html && this._html[0] && this._html[0].coords) {
+
+                location = getLocationFromCoordsOption(this._html[0].coords);
+            }
+
+            return location;
         };
 
-    GoogleMap.DEFAULTS = DEFAUlTS;
+    GoogleMap.DEFAULTS = DEFAULTS;
 
     GoogleMap.STYLES = {};
 
@@ -227,25 +254,23 @@
      */
     GoogleMap.prototype.init = function () {
 
+        if ((!this.options.coords || typeof this.options.coords === "string") && (!this.options.markers && !this.options.html && !this._markers.length && !this._html.length)) {
+
+            console.error("GoogleMap could not be initialized! Set coords option or add Marker or HTML!");
+
+            return;
+        }
+
         this.bounds = new google.maps.LatLngBounds();
 
         this.$el = this.options.el.jquery ? this.options.el : $(this.options.el);
         this.el = this.$el[0];
 
         var mapOptions = {
-            zoom: this.options.zoom
+            zoom: this.options.zoom,
+            location: getInitialLocation.call(this),
+            styles: this.options.styles || (window.GoogleMapStyle ? new GoogleMapStyle(): GoogleMap.STYLES.empty())
         };
-
-        if (this.options.coords instanceof google.maps.LatLng) {
-
-            mapOptions.location = this.options.coords;
-
-        } else if (this.options.coords) {
-
-            mapOptions.location = new google.maps.LatLng(this.options.coords[0], this.options.coords[1]);
-        }
-
-        mapOptions.styles = this.options.styles || (window.GoogleMapStyle ? new GoogleMapStyle(): GoogleMap.STYLES.empty());
 
         mapOptions.center = mapOptions.location;
 
@@ -274,6 +299,11 @@
         if (this.options.fitBoundsOnResize) {
 
             this.initFitBoundsOnResize(this.options.fitBoundsOnResize);
+        }
+
+        if (this.options.centerToBoundsCenterOnResize) {
+
+            this.initCenterToBoundsCenterOnResize(this.options.centerToBoundsCenterOnResize);
         }
 
         this.initialized = true;
@@ -322,9 +352,16 @@
         this._infos.forEach(this.addInfo.bind(this));
         this._htmls.forEach(this.addHTML.bind(this));
 
-        if (this._noCoordsOnInit) {
+        if (this.options.coords === "bounds") {
 
             this.fitBounds();
+
+        } else if (this.options.coords === "center") {
+
+            this.map.setOptions({
+                location: this.bounds.getCenter(),
+                center: this.bounds.getCenter()
+            });
         }
 
         if (typeof this.options.onInit === "function") {
@@ -535,6 +572,8 @@
 
         this.HTMLs[id] = overlay;
 
+        this.bounds.extend(overlay.position);
+
         return defer.promise();
     };
 
@@ -546,6 +585,39 @@
     GoogleMap.prototype.getHTML = function (id) {
 
         return this.HTMLs[id] || null;
+    };
+
+    /**
+     * Při změně velikosti okna zarovná mapu na střed všech markerů/html.
+     *
+     * ms (Number) - debouncing
+     */
+    GoogleMap.prototype.initCenterToBoundsCenterOnResize = function (ms) {
+
+        if (this.resizeCenterToBoundsCenterInitialized) {
+
+            return;
+        }
+
+        var debounce = typeof ms === "number",
+
+            _this = this;
+
+        google.maps.event.addDomListener(window, "resize", function () {
+
+            if (debounce) {
+
+                clearTimeout(debounce);
+
+                debounce = setTimeout(_this.center.bind(_this), ms);
+
+                return;
+            }
+
+            _this.center();
+        });
+
+        this.resizeCenterToBoundsCenterInitialized = true;
     };
 
     /**
@@ -658,7 +730,7 @@
 
         } else {
 
-            this.centerToLocation();
+            this.map.setCenter(this.bounds.getCenter());
         }
     };
 
@@ -2354,6 +2426,7 @@ function GoogleMapDarkStyle() {
 
 GoogleMapDarkStyle.prototype = Object.create(GoogleMapStyle.prototype);
 GoogleMapDarkStyle.prototype.constructor = GoogleMapDarkStyle;
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMapStyle*/
 
@@ -2373,6 +2446,7 @@ function GoogleMapDesaturatedStyle() {
 
 GoogleMapDesaturatedStyle.prototype = Object.create(GoogleMapStyle.prototype);
 GoogleMapDesaturatedStyle.prototype.constructor = GoogleMapDesaturatedStyle;
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMapStyle*/
 
@@ -2557,6 +2631,7 @@ GoogleMapMonochromeStyle.prototype.contrast = function (contrast) {
 
     return this.reset();
 };
+
 /*jslint indent: 4, white: true, nomen: true, regexp: true, unparam: true, node: true, browser: true, devel: true, nomen: true, plusplus: true, regexp: true, sloppy: true, vars: true*/
 /*global GoogleMapMonochromeStyle*/
 
